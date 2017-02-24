@@ -58,3 +58,6 @@ node_database_size_bytes{database="cf_74df5b8f_e7fe_4151_8ec3_741296d42fbc"} 415
 node_database_size_bytes{database="cf_d7161ef3_e6fc_4a05_9631_834525f0f7ba"} 4157
 node_database_size_bytes{database="cf_fa61054d_5c08_4734_a31e_4f2e6065897b"} 4157
 ```
+
+## Port binding
+According to https://github.com/prometheus/prometheus/wiki/Default-port-allocations we will use TCP/9209
