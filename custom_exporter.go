@@ -3,13 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
+	"os"
+	"path"
+
+	"github.com/orange-cloudfoundry/custom_exporter/collector"
 	"github.com/orange-cloudfoundry/custom_exporter/custom_config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"github.com/prometheus/common/version"
-	"net/http"
-	"os"
-	"path"
 )
 
 var (
@@ -46,6 +48,40 @@ var landingPage = []byte(`<html>
 </html>
 `)
 
+func createListCollectors(c *custom_config.Config) []prometheus.Collector {
+
+	var result []prometheus.Collector
+
+	for _, cnf := range c.Metrics {
+		if col := createNewCollector(&cnf); col != nil {
+			result = append(result, col)
+		}
+	}
+
+	if len(result) < 1 {
+		log.Fatalf("Error : the metrics list is empty !!")
+	}
+
+	return result
+}
+
+func createNewCollector(m *custom_config.MetricsItem) prometheus.Collector {
+	var col prometheus.Collector
+	var err error
+
+	switch m.Credentials.Collector {
+	case "shell":
+		col, err = collector.NewShell(m)
+	}
+
+	if err != nil {
+		log.Errorf("Error : %s", err.Error())
+		return nil
+	}
+
+	return col
+}
+
 func init() {
 	prometheus.MustRegister(version.NewCollector(custom_config.Namespace + "_" + custom_config.Exporter))
 }
@@ -63,7 +99,7 @@ func main() {
 
 	myConfig := custom_config.NewConfig(*configFile)
 
-	prometheus.MustRegister(myConfig.FactoryCollectors()...)
+	prometheus.MustRegister(createListCollectors(myConfig)...)
 
 	http.Handle(*metricPath, prometheus.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

@@ -1,11 +1,9 @@
 package custom_config
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"github.com/orange-cloudfoundry/custom_exporter/collector"
 )
 
 // Metric name parts.
@@ -36,7 +34,7 @@ type MetricsItem struct {
 
 	Mapping    []string `yaml: "mapping"`
 	Separator  string   `yaml: "separator, omitempty"`
-	Value_type int      `yaml: "value_type"`
+	Value_type string   `yaml: "value_type"`
 }
 
 type configYaml struct {
@@ -45,10 +43,10 @@ type configYaml struct {
 }
 
 type Config struct {
-	Metrics []MetricsItem
+	Metrics map[string]MetricsItem
 }
 
-func NewConfig(configFile string) (*Config) {
+func NewConfig(configFile string) *Config {
 
 	var contentFile []byte
 	var err error
@@ -64,9 +62,9 @@ func NewConfig(configFile string) (*Config) {
 	}
 
 	myCnf := new(Config)
-	myCnf.metricsList(ymlCnf)
+	myCnf.metricsList(*ymlCnf)
 
-	return &myCnf
+	return myCnf
 }
 
 func (c Config) credentialsList(yaml configYaml) map[string]CredentialsItem {
@@ -85,7 +83,7 @@ func (c *Config) metricsList(yaml configYaml) {
 	var result map[string]MetricsItem
 	var credentials map[string]CredentialsItem
 
-	result = make(map[string]CredentialsItem, 0)
+	result = make(map[string]MetricsItem, 0)
 	credentials = c.credentialsList(yaml)
 
 	for _, v := range yaml.metrics {
@@ -98,38 +96,4 @@ func (c *Config) metricsList(yaml configYaml) {
 	}
 
 	c.Metrics = result
-}
-
-func (c Config) FactoryCollectors() []prometheus.Collector {
-
-	var result []prometheus.Collector
-
-	for _, cnf := range c.Metrics {
-		if col := cnf.createCollector(); col != nil {
-			result = append(result, col)
-		}
-	}
-
-	if len(result) < 1 {
-		log.Fatalf("Error : the metrics list is empty !!")
-	}
-
-	return result
-}
-
-func (m MetricsItem) createCollector() prometheus.Collector {
-	var col prometheus.Collector
-	var err error
-
-	switch m.Credentials.Collector {
-	case "shell":
-		col,err = collector.NewShell(m)
-	}
-
-	if err != nil {
-		log.Errorf("Error : %s", err.Error())
-		return nil
-	}
-
-	return col
 }
