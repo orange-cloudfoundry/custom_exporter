@@ -94,3 +94,6 @@ custom_metric{tag1="3",tag2="snails",instance="ip:port",job="custom_exporter"}  
 
 ## Port binding
 According to https://github.com/prometheus/prometheus/wiki/Default-port-allocations we will use TCP/9209
+
+## WIP : Working schema
+![custom_exporter_working_schema](custom_exporter.png)
