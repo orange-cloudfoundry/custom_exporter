@@ -18,11 +18,7 @@ custom_exporter:
   credentials:
   - name: mysql_connector
     type: mysql 
-    user: monitoring
-    password: m0nit0ring4zew1n
-    host: 127.0.0.1
-    port: 3306
-    database: mysql_broker
+    dsn: mysql://monitoring:m0nit0ring4zew1n@127.0.0.1:3306/mysql_broker
   - name: shell_root
     type: bash
     user: root
@@ -67,12 +63,7 @@ custom_exporter:
   credentials:
   - name: mysql_connector
     type: mysql ##Possible types are for the moment shell mysql redis
-    env: #if set retrieves env variable name
-    user: root
-    password: password
-    host: 1.2.3.4
-    port: 1234
-    database: mydb	
+    dsn: mysql://root:password@1.2.3.4:1234/mydb
   metrics:
   - name: custom_metric
     commands:
@@ -80,11 +71,11 @@ custom_exporter:
     - 2
     - 3
     credential: mysql_connector
-	mapping:
-	- tag1
-	- tag2
-	value_type: UNTYPED
-	separator: \t #useless for MySQL but can be usefull for shell
+    mapping:
+    - tag1
+    - tag2
+    value_type: UNTYPED
+    separator: \t #useless for MySQL but can be usefull for shell
 ```
 
 #### Result example (MySQL view)
