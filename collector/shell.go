@@ -1,54 +1,81 @@
 package collector
 
 import (
+	"errors"
 	"fmt"
 	"github.com/orange-cloudfoundry/custom_exporter/custom_config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
-	"errors"
-	"strconv"
 )
 
 const (
-	collectorShellName     = "shell"
-	collectorShellDesc = "Metrics from shell collector in the custom exporter."
+	CollectorShellName = "shell"
+	CollectorShellDesc = "Metrics from shell collector in the custom exporter."
 )
 
-type collectorShell struct {
-	*CollectorCustom
+type CollectorShell struct {
+	CollectorCustom
 }
 
-func NewShell(config *custom_config.MetricsItem) (*collectorShell, error) {
-	var myCol *collectorShell
-	var err error
+func NewShell(config custom_config.MetricsItem) (*CollectorShell, error) {
+	myCol := CollectorShell{CollectorCustom{config:config,collectorName:CollectorShellName}}
+	myCol.setConfig()
 
-	if myCol.CollectorCustom, err = NewCollectorCustom(config, collectorShellName); err != nil {
-		return nil, err
-	}
-
-	if myCol.config.Credentials.Collector != collectorShellName {
+	if myCol.config.Credential.Collector != CollectorShellName {
 		err := errors.New(
 			fmt.Sprintf("Error mismatching collector type : config type = %s & current type = %s",
-				myCol.config.Credentials.Collector,
-				collectorShellName,
+				myCol.config.Credential.Collector,
+				CollectorShellName,
 			))
+		log.Fatalln("Error:", err)
 		return nil, err
 	}
 
 	if len(myCol.config.Commands) < 1 {
 		err := errors.New("Error empty commands to run !!")
-		return nil, err
+		log.Errorln("Error:", err)
+		return &myCol, err
 	}
 
-	return myCol, nil
+	log.Infof("Collector Added: Type '%s' / Name '%s' / Credentials '%s'", myCol.CollectorCustom.collectorName, myCol.CollectorCustom.config.Name, myCol.CollectorCustom.config.Credential.Name)
+	return &myCol, nil
 }
 
-func (e *collectorShell) scrape(ch chan<- prometheus.Metric) {
+func (e *CollectorShell) Describe(ch chan<- *prometheus.Desc) {
+	log.Debugln("Call Shell Describe")
 
+	metricCh := make(chan prometheus.Metric)
+	doneCh := make(chan struct{})
+
+	go func() {
+		for m := range metricCh {
+			ch <- m.Desc()
+		}
+		close(doneCh)
+	}()
+
+	e.Collect(metricCh)
+	close(metricCh)
+	<-doneCh
+}
+
+// Collect implements prometheus.Collector.
+func (e *CollectorShell) Collect(ch chan<- prometheus.Metric) {
+	log.Debugln("Call Generic Collect")
+	e.scrape(ch)
+	ch <- e.duration
+	ch <- e.totalScrapes
+	ch <- e.error
+	e.scrapeErrors.Collect(ch)
+}
+
+func (e *CollectorShell) scrape(ch chan<- prometheus.Metric) {
+	log.Debugln("Call Shell scrape")
 	e.totalScrapes.Inc()
 
 	var err error
@@ -62,49 +89,63 @@ func (e *collectorShell) scrape(ch chan<- prometheus.Metric) {
 		}
 	}(time.Now())
 
-	if out, err := e.run(); err != nil {
-		log.Fatalf("Error whil running command : %s", err.Error())
-		return
-	} else {
+	if out, err := e.run(); err == nil {
 		e.parse(ch, out)
 	}
-
 }
 
-func (e collectorShell) run() (string, error) {
+func (e CollectorShell) run() (string, error) {
+	log.Debugln("Call Shell run")
 
 	var output []byte
 	var err error
+	var command string
 
 	env := os.Environ()
-	env = append(env, fmt.Sprintf("CREDENTIALS_NAME=%s", e.config.Credentials.Name))
-	env = append(env, fmt.Sprintf("CREDENTIALS_COLLECTOR=%s", e.config.Credentials.Collector))
-	env = append(env, fmt.Sprintf("CREDENTIALS_DSN=%s", e.config.Credentials.Dsn))
-	env = append(env, fmt.Sprintf("CREDENTIALS_PATH=%s", e.config.Credentials.Path))
-	env = append(env, fmt.Sprintf("CREDENTIALS_URI=%s", e.config.Credentials.Uri))
+	env = append(env, fmt.Sprintf("CREDENTIALS_NAME=%s", e.config.Credential.Name))
+	env = append(env, fmt.Sprintf("CREDENTIALS_COLLECTOR=%s", e.config.Credential.Collector))
+	env = append(env, fmt.Sprintf("CREDENTIALS_DSN=%s", e.config.Credential.Dsn))
+	env = append(env, fmt.Sprintf("CREDENTIALS_PATH=%s", e.config.Credential.Path))
+	env = append(env, fmt.Sprintf("CREDENTIALS_URI=%s", e.config.Credential.Uri))
 
 	for _, c := range e.config.Commands {
 
-		_, err = exec.LookPath(c)
+		f := strings.Split(c, " ")
+
+		if len(f) > 1 {
+			command, f = f[0], f[1:]
+		} else {
+			command = f[0]
+			f = make([]string, 0)
+		}
+
+		_, err = exec.LookPath(command)
 		if err != nil {
+			log.Fatalf("Error whil running command : %s", err.Error())
 			return "", err
 		}
 
-		cmd := exec.Command(c)
+		cmd := exec.Command(command, f...)
 		cmd.Env = env
 
 		output, err = cmd.Output()
 
 		if err != nil {
+			log.Fatalf("Error whil running command : %s", err.Error())
 			return "", err
 		}
 	}
 
-	return fmt.Sprint(output), nil
+	log.Debugf("Run command '%s', result:", command)
+	log.Debugln("Run result:", "\n" + string(output))
+
+	return string(output), nil
 }
 
-func (e collectorShell) parse(ch chan<- prometheus.Metric, output string) {
+func (e CollectorShell) parse(ch chan<- prometheus.Metric, output string) {
+	log.Debugln("Call Shell parse")
 	sep := e.config.Separator
+
 	nb := len(e.config.Mapping) + 1
 
 	if len(sep) < 1 {
@@ -112,11 +153,19 @@ func (e collectorShell) parse(ch chan<- prometheus.Metric, output string) {
 	}
 
 	for _, l := range strings.Split(output, "\n") {
-		e.parseLine(ch, strings.SplitN(l, sep, nb))
+		if len(strings.TrimSpace(l)) < nb {
+			continue
+		}
+
+		// prevents first and last char are a separator
+		l = strings.Trim(strings.TrimSpace(l), sep)
+
+		e.parseLine(ch, strings.Split(l, sep))
 	}
 }
 
-func (e collectorShell) parseLine(ch chan<- prometheus.Metric, lines []string) {
+func (e CollectorShell) parseLine(ch chan<- prometheus.Metric, fields []string) {
+	log.Debugln("Call Shell parseLine")
 	var (
 		mapping   []string
 		labelVal  []string
@@ -126,7 +175,10 @@ func (e collectorShell) parseLine(ch chan<- prometheus.Metric, lines []string) {
 	mapping = e.config.Mapping
 	labelVal = make([]string, len(mapping))
 
-	for i, value := range lines {
+	for i, value := range fields {
+
+		value = strings.TrimSpace(value)
+
 		if (i + 1) > len(mapping) {
 
 			if val, err := strconv.ParseFloat(value, 64); err == nil {
@@ -140,8 +192,10 @@ func (e collectorShell) parseLine(ch chan<- prometheus.Metric, lines []string) {
 		}
 	}
 
+	log.Debugf("Add Metric Tag '%s' / TagValue '%s' / Value '%s'", mapping, labelVal, metricVal)
+
 	ch <- prometheus.MustNewConstMetric(
-		prometheus.NewDesc(e.PromDesc(), collectorShellDesc, mapping, nil),
-		e.ValueType(), metricVal, labelVal...,
+		prometheus.NewDesc(e.PromDesc(), CollectorShellDesc, mapping, nil),
+		e.config.Value_type, metricVal, labelVal...,
 	)
 }

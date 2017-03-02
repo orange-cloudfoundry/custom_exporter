@@ -1,0 +1,18 @@
+mode: atomic
+github.com/orange-cloudfoundry/custom_exporter/custom_config/custom_config.go:63.52,67.64 3 7
+github.com/orange-cloudfoundry/custom_exporter/custom_config/custom_config.go:71.2,73.60 2 5
+github.com/orange-cloudfoundry/custom_exporter/custom_config/custom_config.go:77.2,82.19 4 4
+github.com/orange-cloudfoundry/custom_exporter/custom_config/custom_config.go:67.64,69.3 1 2
+github.com/orange-cloudfoundry/custom_exporter/custom_config/custom_config.go:73.60,75.3 1 1
+github.com/orange-cloudfoundry/custom_exporter/custom_config/custom_config.go:85.77,90.53 3 4
+github.com/orange-cloudfoundry/custom_exporter/custom_config/custom_config.go:100.2,100.15 1 4
+github.com/orange-cloudfoundry/custom_exporter/custom_config/custom_config.go:90.53,98.3 1 8
+github.com/orange-cloudfoundry/custom_exporter/custom_config/custom_config.go:103.67,105.20 1 8
+github.com/orange-cloudfoundry/custom_exporter/custom_config/custom_config.go:112.2,112.32 1 8
+github.com/orange-cloudfoundry/custom_exporter/custom_config/custom_config.go:106.2,107.33 1 0
+github.com/orange-cloudfoundry/custom_exporter/custom_config/custom_config.go:108.2,109.31 1 0
+github.com/orange-cloudfoundry/custom_exporter/custom_config/custom_config.go:115.47,122.49 5 4
+github.com/orange-cloudfoundry/custom_exporter/custom_config/custom_config.go:137.2,137.20 1 4
+github.com/orange-cloudfoundry/custom_exporter/custom_config/custom_config.go:122.49,123.48 1 8
+github.com/orange-cloudfoundry/custom_exporter/custom_config/custom_config.go:123.48,132.4 1 8
+github.com/orange-cloudfoundry/custom_exporter/custom_config/custom_config.go:132.4,134.4 1 0

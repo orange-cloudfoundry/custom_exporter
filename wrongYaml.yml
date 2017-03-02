@@ -1,0 +1,27 @@
+custom_exporter:
+credentials:
+- name: shell_root
+type: shell
+- name: mysql_connector
+type: mysql
+dsn: mysql://root:passwor@127.0.0.1:3306/mydb
+metrics:
+- name: custom_metric_shell
+commands:
+- pwd -P
+- ls
+- echo -e 1\tchicken\t128\n2\tbeef\t256\n3\tsnails\t14\n
+credential: shell_root
+mapping:
+- id
+- animals
+separator: "\t"
+value_type: UNTYPED
+- name: custom_metric_mysql
+commands:
+- SELECT aml_id,aml_name,aml_number FROM animals
+credential: mysql_connector
+mapping:
+- id
+- name
+value_type: UNTYPED
