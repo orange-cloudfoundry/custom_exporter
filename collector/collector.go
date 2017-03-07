@@ -6,6 +6,8 @@ import (
 	"strings"
 	"github.com/prometheus/common/log"
 	"time"
+	"fmt"
+	"errors"
 )
 
 // Exporter collects MySQL metrics. It implements prometheus.Collector.
@@ -63,6 +65,31 @@ func NewCollectorHelper(collectorCustom CollectorCustom) *CollectorHelper {
 
 	return helper
 }
+
+func (e CollectorHelper) Check() error {
+	config := e.collectorCustom.Config()
+	name := e.collectorCustom.Name()
+
+	if config.Credential.Collector != name {
+		err := errors.New(
+			fmt.Sprintf("Error mismatching collector type : config type = %s & current type = %s",
+				config.Credential.Collector,
+				name,
+			))
+		log.Errorln("Error:", err)
+		return err
+	}
+
+
+	if len(config.Commands) < 1 {
+		err := errors.New("Error empty commands to run !!")
+		log.Errorln("Error:", err)
+		return err
+	}
+
+	return nil
+}
+
 func (e *CollectorHelper) Describe(ch chan <- *prometheus.Desc) {
 	log.Debugln("Call Shell Describe")
 
@@ -108,6 +135,7 @@ func (e *CollectorHelper) scrape(ch chan <- prometheus.Metric) {
 
 	err = e.collectorCustom.Run(ch)
 }
+
 func PromDesc(collectorCustom CollectorCustom) string {
 	log.Debugln("Call Generic PromDesc")
 	return prometheus.BuildFQName(

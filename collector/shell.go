@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"errors"
 	"fmt"
 	"github.com/orange-cloudfoundry/custom_exporter/custom_config"
 	"github.com/prometheus/client_golang/prometheus"
@@ -22,38 +21,24 @@ type CollectorShell struct {
 }
 
 func NewPrometheusShellCollector(config custom_config.MetricsItem) (prometheus.Collector, error) {
-	if config.Credential.Collector != CollectorShellName {
-		err := errors.New(
-			fmt.Sprintf("Error mismatching collector type : config type = %s & current type = %s",
-				config.Credential.Collector,
-				CollectorShellName,
-			))
-		log.Fatalln("Error:", err)
-		return nil, err
-	}
-
 	myCol := NewCollectorHelper(&CollectorShell{
 		metricsConfig: config,
 	})
 
-	if len(config.Commands) < 1 {
-		err := errors.New("Error empty commands to run !!")
-		log.Errorln("Error:", err)
-		return myCol, err
-	}
-
 	log.Infof("Collector Added: Type '%s' / Name '%s' / Credentials '%s'", CollectorShellName, config.Name, config.Credential.Name)
-	return myCol, nil
+
+	return myCol, myCol.Check()
 }
+
 func (e CollectorShell) Config() custom_config.MetricsItem {
 	return e.metricsConfig
 }
+
 func (e CollectorShell) Name() string {
 	return CollectorShellName
 }
-func (e CollectorShell) Run(ch chan <- prometheus.Metric) error {
-	log.Debugln("Call Shell run")
 
+func (e CollectorShell) Run(ch chan <- prometheus.Metric) error {
 	var output []byte
 	var err error
 	var command string
