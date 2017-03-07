@@ -18,7 +18,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/prometheus/common/log"
 	"io/ioutil"
 )
 
@@ -38,6 +37,7 @@ var (
 	listenAddr  string
 	metricRoute string
 	configPath  string
+	logLevel string
 
 	process ifrit.Process
 )
@@ -121,11 +121,18 @@ func (r failRunner) Run(sigChan <-chan os.Signal, ready chan<- struct{}) error {
 }
 
 var _ = Describe("Custom Export Main Test", func() {
+	BeforeEach(func() {
+		logLevel = "debug"
+	})
+
 	Context("Missing required args", func() {
 		It("shows usage", func() {
 			var args []string
+
+			args = append(args, "-log.level="+logLevel)
+
 			exporter := failRunner{
-				Name:       "customExporter",
+				Name:       "custom_exporter",
 				Command:    exec.Command(binaryPath, args...),
 				StartCheck: "Config file parameter must be provided",
 			}
@@ -139,9 +146,10 @@ var _ = Describe("Custom Export Main Test", func() {
 			var args []string
 
 			args = append(args, "-collector.config=wrong.err")
+			args = append(args, "-log.level="+logLevel)
 
 			exporter := failRunner{
-				Name:       "customExporter",
+				Name:       "custom_exporter",
 				Command:    exec.Command(binaryPath, args...),
 				StartCheck: "no such file or directory",
 			}
@@ -160,9 +168,10 @@ var _ = Describe("Custom Export Main Test", func() {
 			args = append(args, "-web.listen-address="+listenAddr)
 			args = append(args, "-collector.config="+configPath)
 			args = append(args, "-web.telemetry-path="+metricRoute)
+			args = append(args, "-log.level="+logLevel)
 
 			exporterCustom := ginkgomon.New(ginkgomon.Config{
-				Name:              "customExporter",
+				Name:              "custom_exporter",
 				Command:           exec.Command(binaryPath, args...),
 				StartCheck:        "Listening",
 				StartCheckTimeout: 30 * time.Second,
@@ -201,9 +210,14 @@ var _ = Describe("Custom Export Main Test", func() {
 			Expect(resp.StatusCode).To(Equal(200))
 
 			body, err := ioutil.ReadAll(resp.Body)
+
 			Expect(err).NotTo(HaveOccurred())
 
-			log.Infoln(string(body))
+			//println(string(body))
+
+			Expect(string(body)).To(ContainSubstring("custom_shell_custom_metric_shell{animals=\"beef\",id=\"2\"} 256"))
+			Expect(string(body)).To(ContainSubstring("custom_shell_custom_metric_shell{animals=\"chicken\",id=\"1\"} 128"))
+			Expect(string(body)).To(ContainSubstring("custom_shell_custom_metric_shell{animals=\"snails\",id=\"3\"} 14"))
 		})
 
 	})

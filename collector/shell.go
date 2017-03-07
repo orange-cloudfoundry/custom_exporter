@@ -22,10 +22,6 @@ type CollectorShell struct {
 }
 
 func NewPrometheusShellCollector(config custom_config.MetricsItem) (prometheus.Collector, error) {
-	myCol := NewCollectorHelper(&CollectorShell{
-		metricsConfig: config,
-	})
-
 	if config.Credential.Collector != CollectorShellName {
 		err := errors.New(
 			fmt.Sprintf("Error mismatching collector type : config type = %s & current type = %s",
@@ -35,6 +31,10 @@ func NewPrometheusShellCollector(config custom_config.MetricsItem) (prometheus.C
 		log.Fatalln("Error:", err)
 		return nil, err
 	}
+
+	myCol := NewCollectorHelper(&CollectorShell{
+		metricsConfig: config,
+	})
 
 	if len(config.Commands) < 1 {
 		err := errors.New("Error empty commands to run !!")
@@ -51,7 +51,7 @@ func (e CollectorShell) Config() custom_config.MetricsItem {
 func (e CollectorShell) Name() string {
 	return CollectorShellName
 }
-func (e CollectorShell) Run() (string, error) {
+func (e CollectorShell) Run(ch chan <- prometheus.Metric) error {
 	log.Debugln("Call Shell run")
 
 	var output []byte
@@ -79,7 +79,7 @@ func (e CollectorShell) Run() (string, error) {
 		_, err = exec.LookPath(command)
 		if err != nil {
 			log.Fatalf("Error whil running command : %s", err.Error())
-			return "", err
+			return err
 		}
 
 		cmd := exec.Command(command, f...)
@@ -89,18 +89,17 @@ func (e CollectorShell) Run() (string, error) {
 
 		if err != nil {
 			log.Fatalf("Error whil running command : %s", err.Error())
-			return "", err
+			return err
 		}
 	}
 
 	log.Debugf("Run command '%s', result:", command)
 	log.Debugln("Run result:", "\n" + string(output))
 
-	return string(output), nil
+	return e.parse(ch, string(output))
 }
 
-func (e CollectorShell) parse(ch chan <- prometheus.Metric, output string) {
-	log.Debugln("Call Shell parse")
+func (e CollectorShell) parse(ch chan <- prometheus.Metric, output string) error {
 	sep := e.metricsConfig.Separator
 
 	nb := len(e.metricsConfig.Mapping) + 1
@@ -119,6 +118,8 @@ func (e CollectorShell) parse(ch chan <- prometheus.Metric, output string) {
 
 		e.parseLine(ch, strings.Split(l, sep))
 	}
+
+	return nil
 }
 
 func (e *CollectorShell) parseLine(ch chan <- prometheus.Metric, fields []string) {
@@ -149,7 +150,7 @@ func (e *CollectorShell) parseLine(ch chan <- prometheus.Metric, fields []string
 		}
 	}
 
-	log.Debugf("Add Metric Tag '%s' / TagValue '%s' / Value '%s'", mapping, labelVal, metricVal)
+	log.Debugf("Add Metric Tag '%s' / TagValue '%s' / Value '%v'", mapping, labelVal, metricVal)
 
 	ch <- prometheus.MustNewConstMetric(
 		prometheus.NewDesc(PromDesc(e), CollectorShellDesc, mapping, nil),

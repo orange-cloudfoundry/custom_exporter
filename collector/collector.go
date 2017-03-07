@@ -17,48 +17,51 @@ type CollectorHelper struct {
 }
 type CollectorCustom interface {
 	Name() string
-	Run() (string, error)
+	Run(ch chan <- prometheus.Metric) error
 	Config() custom_config.MetricsItem
 }
 
 func NewCollectorHelper(collectorCustom CollectorCustom) *CollectorHelper {
-	helper := &CollectorHelper{collectorCustom: collectorCustom}
-	helper.setConfig()
-	return helper
-}
-func (c *CollectorHelper) setConfig() {
-	collectorName := c.collectorCustom.Name()
-	configName := c.collectorCustom.Config().Name
+	collectorName := collectorCustom.Name()
+	configName := collectorCustom.Config().Name
+
 	if len(collectorName) < 1 {
 		collectorName = custom_config.Exporter
 	}
 
-	c.duration = prometheus.NewGauge(prometheus.GaugeOpts{
+	helper := &CollectorHelper{
+		duration: prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: custom_config.Namespace,
 		Subsystem: collectorName,
 		Name:      "last_scrape_duration_seconds",
 		Help:      "Duration of the last scrape of metrics from " + configName,
-	})
+		}),
 
-	c.totalScrapes = prometheus.NewCounter(prometheus.CounterOpts{
-		Namespace: custom_config.Namespace,
-		Subsystem: collectorName,
-		Name:      "scrapes_total",
-		Help:      "Total number of times " + configName + " was scraped for metrics.",
-	})
-	c.scrapeErrors = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: custom_config.Namespace,
-		Subsystem: collectorName,
-		Name:      "scrape_errors_total",
-		Help:      "Total number of times an error occurred scraping a " + configName,
-	}, []string{"collector"})
-
-	c.error = prometheus.NewGauge(prometheus.GaugeOpts{
+		error: prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: custom_config.Namespace,
 		Subsystem: collectorName,
 		Name:      "last_scrape_error",
 		Help:      "Whether the last scrape of metrics from " + configName + " resulted in an error (1 for error, 0 for success).",
-	})
+		}),
+
+		totalScrapes: prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace: custom_config.Namespace,
+		Subsystem: collectorName,
+		Name:      "scrapes_total",
+		Help:      "Total number of times " + configName + " was scraped for metrics.",
+		}),
+
+		scrapeErrors: prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: custom_config.Namespace,
+		Subsystem: collectorName,
+		Name:      "scrape_errors_total",
+		Help:      "Total number of times an error occurred scraping a " + configName,
+		}, []string{"collector"}),
+
+		collectorCustom: collectorCustom,
+	}
+
+	return helper
 }
 func (e *CollectorHelper) Describe(ch chan <- *prometheus.Desc) {
 	log.Debugln("Call Shell Describe")
@@ -103,7 +106,7 @@ func (e *CollectorHelper) scrape(ch chan <- prometheus.Metric) {
 		}
 	}(time.Now())
 
-	e.collectorCustom.Run()
+	err = e.collectorCustom.Run(ch)
 }
 func PromDesc(collectorCustom CollectorCustom) string {
 	log.Debugln("Call Generic PromDesc")

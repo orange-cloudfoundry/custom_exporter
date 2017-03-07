@@ -8,8 +8,6 @@ custom_exporter:
   metrics:
   - name: custom_metric_shell
     commands:
-    - pwd -P
-    - ls
     - echo -e 1\tchicken\t128\n2\tbeef\t256\n3\tsnails\t14\n
     credential: shell_root
     mapping:
