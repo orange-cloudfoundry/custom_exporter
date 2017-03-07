@@ -60,7 +60,7 @@ func createNewCollector(m *custom_config.MetricsItem) prometheus.Collector {
 
 	switch m.Credential.Collector {
 	case "shell":
-		col, err = collector.NewShell(*m)
+		col, err = collector.NewPrometheusShellCollector(*m)
 	default:
 		return nil
 	}
@@ -81,7 +81,7 @@ func main() {
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Fprintln(os.Stdout, version.Print(custom_config.Namespace+"_"+custom_config.Exporter))
+		fmt.Fprintln(os.Stdout, version.Print(custom_config.Namespace + "_" + custom_config.Exporter))
 		os.Exit(0)
 	}
 
@@ -94,7 +94,7 @@ func main() {
 		log.Fatalln("Error:", err.Error())
 	}
 
-	log.Infoln("Starting "+custom_config.Namespace+"_"+custom_config.Exporter, version.Info())
+	log.Infoln("Starting " + custom_config.Namespace + "_" + custom_config.Exporter, version.Info())
 	log.Infoln("Build context", version.BuildContext())
 
 	var myConfig *custom_config.Config
