@@ -136,3 +136,13 @@ func (c *Config) metricsList(yaml ConfigYaml) {
 
 	c.Metrics = result
 }
+
+func (m MetricsItem) SeparatorValue() string {
+	sep := m.Separator
+
+	if len(sep) < 1 {
+		sep = "\t"
+	}
+
+	return sep
+}

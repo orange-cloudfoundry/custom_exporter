@@ -19,6 +19,7 @@ type CollectorHelper struct {
 }
 type CollectorCustom interface {
 	Name() string
+	Desc() string
 	Run(ch chan <- prometheus.Metric) error
 	Config() custom_config.MetricsItem
 }

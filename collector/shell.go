@@ -38,6 +38,10 @@ func (e CollectorShell) Name() string {
 	return CollectorShellName
 }
 
+func (e CollectorShell) Desc() string {
+	return CollectorShellDesc
+}
+
 func (e CollectorShell) Run(ch chan <- prometheus.Metric) error {
 	var output []byte
 	var err error
@@ -63,7 +67,7 @@ func (e CollectorShell) Run(ch chan <- prometheus.Metric) error {
 
 		_, err = exec.LookPath(command)
 		if err != nil {
-			log.Fatalf("Error whil running command : %s", err.Error())
+			log.Errorf("Error whil running command : %s", err.Error())
 			return err
 		}
 
@@ -73,7 +77,7 @@ func (e CollectorShell) Run(ch chan <- prometheus.Metric) error {
 		output, err = cmd.Output()
 
 		if err != nil {
-			log.Fatalf("Error whil running command : %s", err.Error())
+			log.Errorf("Error whil running command : %s", err.Error())
 			return err
 		}
 	}
@@ -85,8 +89,10 @@ func (e CollectorShell) Run(ch chan <- prometheus.Metric) error {
 }
 
 func (e CollectorShell) parse(ch chan <- prometheus.Metric, output string) error {
-	sep := e.metricsConfig.Separator
+	var err error
 
+	err = nil
+	sep := e.metricsConfig.Separator
 	nb := len(e.metricsConfig.Mapping) + 1
 
 	if len(sep) < 1 {
@@ -101,35 +107,36 @@ func (e CollectorShell) parse(ch chan <- prometheus.Metric, output string) error
 		// prevents first and last char are a separator
 		l = strings.Trim(strings.TrimSpace(l), sep)
 
-		e.parseLine(ch, strings.Split(l, sep))
+		if errline := e.parseLine(ch, strings.Split(l, sep)); errline != nil {
+			log.Errorf("Error whil parsing line : %s", errline.Error())
+			err = errline
+		}
 	}
 
-	return nil
+	return err
 }
 
-func (e *CollectorShell) parseLine(ch chan <- prometheus.Metric, fields []string) {
+func (e *CollectorShell) parseLine(ch chan <- prometheus.Metric, fields []string) error {
 	log.Debugln("Call Shell parseLine")
 	var (
 		mapping   []string
 		labelVal  []string
 		metricVal float64
+		err 	  error
 	)
 
 	mapping = e.metricsConfig.Mapping
 	labelVal = make([]string, len(mapping))
+	err = nil
 
 	for i, value := range fields {
 
 		value = strings.TrimSpace(value)
 
 		if (i + 1) > len(mapping) {
-
-			if val, err := strconv.ParseFloat(value, 64); err == nil {
-				metricVal = val
-			} else {
+			if metricVal, err = strconv.ParseFloat(value, 64); err != nil {
 				metricVal = float64(0)
 			}
-
 		} else {
 			labelVal[i] = value
 		}
@@ -141,4 +148,6 @@ func (e *CollectorShell) parseLine(ch chan <- prometheus.Metric, fields []string
 		prometheus.NewDesc(PromDesc(e), CollectorShellDesc, mapping, nil),
 		e.metricsConfig.Value_type, metricVal, labelVal...,
 	)
+
+	return err
 }
