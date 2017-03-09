@@ -9,8 +9,8 @@ import (
 var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 	var (
 		filePath string
-		config *custom_config.Config
-		err  error
+		config   *custom_config.Config
+		err      error
 	)
 
 	JustBeforeEach(func() {

@@ -30,7 +30,7 @@ type MetricsItem struct {
 	Name     string
 	Commands []string
 
-	Credential  CredentialsItem
+	Credential CredentialsItem
 
 	Mapping    []string
 	Separator  string
@@ -122,12 +122,12 @@ func (c *Config) metricsList(yaml ConfigYaml) {
 	for _, v := range yaml.Custom_exporter.Metrics {
 		if cred, ok := credentials[v.Credential]; ok {
 			result[v.Name] = MetricsItem{
-				Name:        v.Name,
-				Commands:    v.Commands,
-				Credential:  cred,
-				Mapping:     v.Mapping,
-				Separator:   v.Separator,
-				Value_type:  c.ValueType(v.Value_type),
+				Name:       v.Name,
+				Commands:   v.Commands,
+				Credential: cred,
+				Mapping:    v.Mapping,
+				Separator:  v.Separator,
+				Value_type: c.ValueType(v.Value_type),
 			}
 		} else {
 			log.Fatalf("error credential, collector type not found : %s", v.Credential)

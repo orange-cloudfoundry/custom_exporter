@@ -42,7 +42,7 @@ func (e CollectorShell) Desc() string {
 	return CollectorShellDesc
 }
 
-func (e CollectorShell) Run(ch chan <- prometheus.Metric) error {
+func (e CollectorShell) Run(ch chan<- prometheus.Metric) error {
 	var output []byte
 	var err error
 	var command string
@@ -83,12 +83,12 @@ func (e CollectorShell) Run(ch chan <- prometheus.Metric) error {
 	}
 
 	log.Debugf("Run command '%s', result:", command)
-	log.Debugln("Run result:", "\n" + string(output))
+	log.Debugln("Run result:", "\n"+string(output))
 
 	return e.parse(ch, string(output))
 }
 
-func (e CollectorShell) parse(ch chan <- prometheus.Metric, output string) error {
+func (e CollectorShell) parse(ch chan<- prometheus.Metric, output string) error {
 	var err error
 
 	err = nil
@@ -116,13 +116,13 @@ func (e CollectorShell) parse(ch chan <- prometheus.Metric, output string) error
 	return err
 }
 
-func (e *CollectorShell) parseLine(ch chan <- prometheus.Metric, fields []string) error {
+func (e *CollectorShell) parseLine(ch chan<- prometheus.Metric, fields []string) error {
 	log.Debugln("Call Shell parseLine")
 	var (
 		mapping   []string
 		labelVal  []string
 		metricVal float64
-		err 	  error
+		err       error
 	)
 
 	mapping = e.metricsConfig.Mapping
