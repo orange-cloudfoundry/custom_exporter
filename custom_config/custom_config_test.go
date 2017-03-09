@@ -64,7 +64,7 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 			name := "custom_metric_shell"
 
 			Expect(config.Metrics[name].Name).To(Equal(name))
-			Expect(len(config.Metrics[name].Commands)).To(Equal(3))
+			Expect(len(config.Metrics[name].Commands)).To(Equal(1))
 			Expect(config.Metrics[name].Credential.Name).To(Equal("shell_root"))
 			Expect(config.Metrics[name].Credential.Collector).To(Equal("shell"))
 		})
