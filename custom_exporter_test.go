@@ -37,7 +37,7 @@ var (
 	listenAddr  string
 	metricRoute string
 	configPath  string
-	logLevel string
+	logLevel    string
 
 	process ifrit.Process
 )
