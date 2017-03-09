@@ -67,28 +67,26 @@ func NewCollectorHelper(collectorCustom CollectorCustom) *CollectorHelper {
 	return helper
 }
 
-func (e CollectorHelper) Check() error {
+func (e CollectorHelper) Check(err error) error {
 	config := e.collectorCustom.Config()
 	name := e.collectorCustom.Name()
 
 	if config.Credential.Collector != name {
-		err := errors.New(
+		err = errors.New(
 			fmt.Sprintf("Error mismatching collector type : config type = %s & current type = %s",
 				config.Credential.Collector,
 				name,
 			))
 		log.Errorln("Error:", err)
-		return err
 	}
 
 
 	if len(config.Commands) < 1 {
-		err := errors.New("Error empty commands to run !!")
+		err = errors.New("Error empty commands to run !!")
 		log.Errorln("Error:", err)
-		return err
 	}
 
-	return nil
+	return err
 }
 
 func (e *CollectorHelper) Describe(ch chan <- *prometheus.Desc) {

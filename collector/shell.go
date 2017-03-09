@@ -27,7 +27,7 @@ func NewPrometheusShellCollector(config custom_config.MetricsItem) (prometheus.C
 
 	log.Infof("Collector Added: Type '%s' / Name '%s' / Credentials '%s'", CollectorShellName, config.Name, config.Credential.Name)
 
-	return myCol, myCol.Check()
+	return myCol, myCol.Check(nil)
 }
 
 func (e CollectorShell) Config() custom_config.MetricsItem {
