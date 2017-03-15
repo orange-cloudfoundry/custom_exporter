@@ -1,10 +1,12 @@
 package collector
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/orange-cloudfoundry/custom_exporter/custom_config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
+	"io"
 	"os"
 	"os/exec"
 	"strconv"
@@ -12,40 +14,49 @@ import (
 )
 
 const (
-	CollectorShellName = "shell"
-	CollectorShellDesc = "Metrics from shell collector in the custom exporter."
+	CollectorBashName = "bash"
+	CollectorBashDesc = "Metrics from shell collector in the custom exporter."
 )
 
-type CollectorShell struct {
+type CollectorBash struct {
 	metricsConfig custom_config.MetricsItem
 }
 
-func NewPrometheusShellCollector(config custom_config.MetricsItem) (prometheus.Collector, error) {
-	myCol := NewCollectorHelper(&CollectorShell{
+func NewCollectorBash(config custom_config.MetricsItem) *CollectorBash {
+	return &CollectorBash{
 		metricsConfig: config,
-	})
+	}
+}
 
-	log.Infof("Collector Added: Type '%s' / Name '%s' / Credentials '%s'", CollectorShellName, config.Name, config.Credential.Name)
+func NewPrometheusBashCollector(config custom_config.MetricsItem) (prometheus.Collector, error) {
+	myCol := NewCollectorHelper(
+		NewCollectorBash(config),
+	)
+
+	log.Infof("Collector Added: Type '%s' / Name '%s' / Credentials '%s'", CollectorBashName, config.Name, config.Credential.Name)
 
 	return myCol, myCol.Check(nil)
 }
 
-func (e CollectorShell) Config() custom_config.MetricsItem {
+func (e CollectorBash) Config() custom_config.MetricsItem {
 	return e.metricsConfig
 }
 
-func (e CollectorShell) Name() string {
-	return CollectorShellName
+func (e CollectorBash) Name() string {
+	return CollectorBashName
 }
 
-func (e CollectorShell) Desc() string {
-	return CollectorShellDesc
+func (e CollectorBash) Desc() string {
+	return CollectorBashDesc
 }
 
-func (e CollectorShell) Run(ch chan<- prometheus.Metric) error {
+func (e CollectorBash) Run(ch chan<- prometheus.Metric) error {
 	var output []byte
 	var err error
 	var command string
+
+	var bufInput bytes.Buffer
+	var bufOutput bytes.Buffer
 
 	env := os.Environ()
 	env = append(env, fmt.Sprintf("CREDENTIALS_NAME=%s", e.metricsConfig.Credential.Name))
@@ -53,6 +64,9 @@ func (e CollectorShell) Run(ch chan<- prometheus.Metric) error {
 	env = append(env, fmt.Sprintf("CREDENTIALS_DSN=%s", e.metricsConfig.Credential.Dsn))
 	env = append(env, fmt.Sprintf("CREDENTIALS_PATH=%s", e.metricsConfig.Credential.Path))
 	env = append(env, fmt.Sprintf("CREDENTIALS_URI=%s", e.metricsConfig.Credential.Uri))
+
+	bufInput.Reset()
+	bufOutput.Reset()
 
 	for _, c := range e.metricsConfig.Commands {
 
@@ -65,50 +79,62 @@ func (e CollectorShell) Run(ch chan<- prometheus.Metric) error {
 			f = make([]string, 0)
 		}
 
+		log.Debugf("Checking command/script exists : \"%s\"...", command)
+
 		_, err = exec.LookPath(command)
 		if err != nil {
-			log.Errorf("Error whil running command : %s", err.Error())
+			log.Errorf("Error with metric \"%s\" while checking command exists \"%s\" : %s", e.metricsConfig.Name, c, err.Error())
 			return err
 		}
+
+		log.Debugf("Running command \"%s\" with params \"%s\"...", command, strings.Join(f, " "))
+
+		bufInput.Reset()
+		io.Copy(&bufInput, &bufOutput)
+		bufOutput.Reset()
 
 		cmd := exec.Command(command, f...)
 		cmd.Env = env
+		cmd.Stdin = &bufInput
+		cmd.Stdout = &bufOutput
 
-		output, err = cmd.Output()
+		err = cmd.Run()
 
 		if err != nil {
-			log.Errorf("Error whil running command : %s", err.Error())
+			log.Errorf("Error with metric \"%s\" while running command \"%s\" : %s", e.metricsConfig.Name, c, err.Error())
 			return err
 		}
+
+		output = bufOutput.Bytes()
+
+		log.Debugf("Result command \"%s\" : \"%s\"", command, string(output))
 	}
 
-	log.Debugf("Run command '%s', result:", command)
-	log.Debugln("Run result:", "\n"+string(output))
+	log.Debugf("Run metric \"%s\" command '%s', result:", e.metricsConfig.Name, command)
+	log.Debugln("Result:", "\n"+string(output))
 
 	return e.parse(ch, string(output))
 }
 
-func (e CollectorShell) parse(ch chan<- prometheus.Metric, output string) error {
+func (e CollectorBash) parse(ch chan<- prometheus.Metric, output string) error {
 	var err error
 
 	err = nil
 	sep := e.metricsConfig.Separator
 	nb := len(e.metricsConfig.Mapping) + 1
 
-	if len(sep) < 1 {
-		sep = "\t"
-	}
-
 	for _, l := range strings.Split(output, "\n") {
 		if len(strings.TrimSpace(l)) < nb {
 			continue
 		}
 
+		log.Debugf("Parsing line: \"%s\"...", l)
+
 		// prevents first and last char are a separator
 		l = strings.Trim(strings.TrimSpace(l), sep)
 
 		if errline := e.parseLine(ch, strings.Split(l, sep)); errline != nil {
-			log.Errorf("Error whil parsing line : %s", errline.Error())
+			log.Errorf("Error with metric \"%s\" while parsing line : %s", e.metricsConfig.Name, errline.Error())
 			err = errline
 		}
 	}
@@ -116,8 +142,7 @@ func (e CollectorShell) parse(ch chan<- prometheus.Metric, output string) error 
 	return err
 }
 
-func (e *CollectorShell) parseLine(ch chan<- prometheus.Metric, fields []string) error {
-	log.Debugln("Call Shell parseLine")
+func (e *CollectorBash) parseLine(ch chan<- prometheus.Metric, fields []string) error {
 	var (
 		mapping   []string
 		labelVal  []string
@@ -142,10 +167,10 @@ func (e *CollectorShell) parseLine(ch chan<- prometheus.Metric, fields []string)
 		}
 	}
 
-	log.Debugf("Add Metric Tag '%s' / TagValue '%s' / Value '%v'", mapping, labelVal, metricVal)
+	log.Debugf("Metric \"%s\" Add Metric Tag '%s' / TagValue '%s' / Value '%v'", e.metricsConfig.Name, mapping, labelVal, metricVal)
 
 	ch <- prometheus.MustNewConstMetric(
-		prometheus.NewDesc(PromDesc(e), CollectorShellDesc, mapping, nil),
+		prometheus.NewDesc(PromDesc(e), CollectorBashDesc, mapping, nil),
 		e.metricsConfig.Value_type, metricVal, labelVal...,
 	)
 

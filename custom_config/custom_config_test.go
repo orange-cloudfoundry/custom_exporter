@@ -56,8 +56,8 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("should return a config struct of 2 metrics", func() {
-			Expect(len(config.Metrics)).To(Equal(2))
+		It("should return a config struct of 6 metrics", func() {
+			Expect(len(config.Metrics)).To(Equal(3))
 		})
 
 		It("should return metrics custom_metric_shell well composed", func() {
@@ -66,7 +66,7 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 			Expect(config.Metrics[name].Name).To(Equal(name))
 			Expect(len(config.Metrics[name].Commands)).To(Equal(1))
 			Expect(config.Metrics[name].Credential.Name).To(Equal("shell_root"))
-			Expect(config.Metrics[name].Credential.Collector).To(Equal("shell"))
+			Expect(config.Metrics[name].Credential.Collector).To(Equal("bash"))
 		})
 
 		It("should return metrics custom_metric_shell well composed", func() {
@@ -76,6 +76,15 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 			Expect(len(config.Metrics[name].Commands)).To(Equal(1))
 			Expect(config.Metrics[name].Credential.Name).To(Equal("mysql_connector"))
 			Expect(config.Metrics[name].Credential.Collector).To(Equal("mysql"))
+		})
+
+		It("should return metrics custom_metric_shell well composed", func() {
+			name := "custom_metric_redis"
+
+			Expect(config.Metrics[name].Name).To(Equal(name))
+			Expect(len(config.Metrics[name].Commands)).To(Equal(1))
+			Expect(config.Metrics[name].Credential.Name).To(Equal("redis_connector"))
+			Expect(config.Metrics[name].Credential.Collector).To(Equal("redis"))
 		})
 	})
 })

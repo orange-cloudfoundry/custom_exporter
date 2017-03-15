@@ -1,7 +1,7 @@
 custom_exporter:
 credentials:
 - name: shell_root
-type: shell
+type: bash
 - name: mysql_connector
 type: mysql
 dsn: mysql://root:passwor@127.0.0.1:3306/mydb

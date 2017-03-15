@@ -1,2 +1,5 @@
 /custom_exporter
-*.coverprofile
+*.cover*
+*/*.cover*
+**/*.cover*
+

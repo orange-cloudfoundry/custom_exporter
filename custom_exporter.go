@@ -59,8 +59,10 @@ func createNewCollector(m *custom_config.MetricsItem) prometheus.Collector {
 	var err error
 
 	switch m.Credential.Collector {
-	case "shell":
-		col, err = collector.NewPrometheusShellCollector(*m)
+	case "bash":
+		col, err = collector.NewPrometheusBashCollector(*m)
+	case "redis":
+		col, err = collector.NewPrometheusRedisCollector(*m)
 	default:
 		return nil
 	}
