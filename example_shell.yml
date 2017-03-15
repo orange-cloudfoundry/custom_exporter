@@ -1,0 +1,16 @@
+---
+  credentials:
+  - name: shell_root
+    type: bash
+  metrics:
+  - name: custom_metric_shell
+    commands:
+    - ls -ahl
+    - pwd
+    - echo -e 1\tchicken\t128\n2\tbeef\t256\n3\tsnails\t14\n
+    credential: shell_root
+    mapping:
+    - id
+    - animals
+    separator: "\t"
+    value_type: UNTYPED

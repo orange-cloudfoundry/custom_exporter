@@ -1,13 +1,13 @@
 package collector
 
 import (
+	"errors"
+	"fmt"
 	"github.com/orange-cloudfoundry/custom_exporter/custom_config"
 	"github.com/prometheus/client_golang/prometheus"
-	"strings"
 	"github.com/prometheus/common/log"
+	"strings"
 	"time"
-	"fmt"
-	"errors"
 )
 
 // Exporter collects MySQL metrics. It implements prometheus.Collector.
@@ -20,7 +20,7 @@ type CollectorHelper struct {
 type CollectorCustom interface {
 	Name() string
 	Desc() string
-	Run(ch chan <- prometheus.Metric) error
+	Run(ch chan<- prometheus.Metric) error
 	Config() custom_config.MetricsItem
 }
 
@@ -34,31 +34,31 @@ func NewCollectorHelper(collectorCustom CollectorCustom) *CollectorHelper {
 
 	helper := &CollectorHelper{
 		duration: prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: custom_config.Namespace,
-		Subsystem: collectorName,
-		Name:      "last_scrape_duration_seconds",
-		Help:      "Duration of the last scrape of metrics from " + configName,
+			Namespace: custom_config.Namespace,
+			Subsystem: collectorName,
+			Name:      "last_scrape_duration_seconds",
+			Help:      "Duration of the last scrape of metrics from " + configName,
 		}),
 
 		error: prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: custom_config.Namespace,
-		Subsystem: collectorName,
-		Name:      "last_scrape_error",
-		Help:      "Whether the last scrape of metrics from " + configName + " resulted in an error (1 for error, 0 for success).",
+			Namespace: custom_config.Namespace,
+			Subsystem: collectorName,
+			Name:      "last_scrape_error",
+			Help:      "Whether the last scrape of metrics from " + configName + " resulted in an error (1 for error, 0 for success).",
 		}),
 
 		totalScrapes: prometheus.NewCounter(prometheus.CounterOpts{
-		Namespace: custom_config.Namespace,
-		Subsystem: collectorName,
-		Name:      "scrapes_total",
-		Help:      "Total number of times " + configName + " was scraped for metrics.",
+			Namespace: custom_config.Namespace,
+			Subsystem: collectorName,
+			Name:      "scrapes_total",
+			Help:      "Total number of times " + configName + " was scraped for metrics.",
 		}),
 
 		scrapeErrors: prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: custom_config.Namespace,
-		Subsystem: collectorName,
-		Name:      "scrape_errors_total",
-		Help:      "Total number of times an error occurred scraping a " + configName,
+			Namespace: custom_config.Namespace,
+			Subsystem: collectorName,
+			Name:      "scrape_errors_total",
+			Help:      "Total number of times an error occurred scraping a " + configName,
 		}, []string{"collector"}),
 
 		collectorCustom: collectorCustom,
@@ -80,7 +80,6 @@ func (e CollectorHelper) Check(err error) error {
 		log.Errorln("Error:", err)
 	}
 
-
 	if len(config.Commands) < 1 {
 		err = errors.New("Error empty commands to run !!")
 		log.Errorln("Error:", err)
@@ -89,7 +88,7 @@ func (e CollectorHelper) Check(err error) error {
 	return err
 }
 
-func (e *CollectorHelper) Describe(ch chan <- *prometheus.Desc) {
+func (e *CollectorHelper) Describe(ch chan<- *prometheus.Desc) {
 	log.Debugln("Call Shell Describe")
 
 	metricCh := make(chan prometheus.Metric)
@@ -108,7 +107,7 @@ func (e *CollectorHelper) Describe(ch chan <- *prometheus.Desc) {
 }
 
 // Collect implements prometheus.Collector.
-func (e *CollectorHelper) Collect(ch chan <- prometheus.Metric) {
+func (e *CollectorHelper) Collect(ch chan<- prometheus.Metric) {
 	log.Debugln("Call Generic Collect")
 	e.scrape(ch)
 	ch <- e.duration
@@ -117,7 +116,7 @@ func (e *CollectorHelper) Collect(ch chan <- prometheus.Metric) {
 	e.scrapeErrors.Collect(ch)
 }
 
-func (e *CollectorHelper) scrape(ch chan <- prometheus.Metric) {
+func (e *CollectorHelper) scrape(ch chan<- prometheus.Metric) {
 	log.Debugln("Call Shell scrape")
 	e.totalScrapes.Inc()
 

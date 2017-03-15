@@ -2,10 +2,9 @@
   credentials:
   - name: shell_root
     type: bash
-    user: root
   - name: mysql_connector
     type: mysql
-    dsn: mysql://root:password@127.0.0.1:3306/mydb
+    dsn: mysql://root:passwor@127.0.0.1:3306/mydb
   - name: redis_connector
     type: redis
     dsn: tcp://:password@127.0.0.1:6789/0
@@ -21,6 +20,17 @@
     - animals
     separator: "\t"
     value_type: UNTYPED
+  - name: custom_metric_shell_error
+    commands:
+    - ls -ahl
+    - fake1234
+    - echo -e 1\tchicken\t128\n2\tbeef\t256\n3\tsnails\t14\n
+    credential: shell_root
+    mapping:
+    - id
+    - animals
+    separator: "\t"
+    value_type: UNTYPED
   - name: custom_metric_mysql
     commands:
     - SELECT aml_id,aml_name,aml_number FROM animals
@@ -29,12 +39,27 @@
     - id
     - name
     value_type: UNTYPED
+  - name: custom_metric_mysql_error
+    commands:
+    - SELECT "id", "name", 1, FROM animals
+    credential: mysql_connector
+    mapping:
+    - id
+    - name
+    value_type: UNTYPED
   - name: custom_metric_redis
     commands:
-    - GET foo*
+    - GET foo1
     credential: redis_connector
     mapping:
     - role
     value_name: value
     value_type: UNTYPED
-
+  - name: custom_metric_redis_error
+    commands:
+    - ERROR_COMMAND
+    credential: redis_connector
+    mapping:
+    - role
+    value_name: error
+    value_type: UNTYPED

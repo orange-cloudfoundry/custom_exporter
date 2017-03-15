@@ -16,6 +16,7 @@ import (
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
+	"github.com/alicebob/miniredis"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"io/ioutil"
@@ -30,6 +31,7 @@ type failRunner struct {
 	Cleanup           func()
 	session           *gexec.Session
 	sessionReady      chan struct{}
+	existStatus       int
 }
 
 var (
@@ -39,6 +41,7 @@ var (
 	configPath  string
 	logLevel    string
 
+	server  *miniredis.Miniredis
 	process ifrit.Process
 )
 
@@ -114,7 +117,7 @@ func (r failRunner) Run(sigChan <-chan os.Signal, ready chan<- struct{}) error {
 			}
 
 			Expect(string(allOutput.Contents())).To(ContainSubstring(r.StartCheck))
-			Expect(session.ExitCode()).To(Equal(1), fmt.Sprintf("Expected process to exit with 1, got: %d", session.ExitCode()))
+			Expect(session.ExitCode()).To(Equal(r.existStatus), fmt.Sprintf("Expected process to exit with %d, got: %d", r.existStatus, session.ExitCode()))
 			return nil
 		}
 	}
@@ -125,6 +128,10 @@ var _ = Describe("Custom Export Main Test", func() {
 		logLevel = "debug"
 	})
 
+	AfterEach(func() {
+		ginkgomon.Kill(process)
+	})
+
 	Context("Missing required args", func() {
 		It("shows usage", func() {
 			var args []string
@@ -132,12 +139,12 @@ var _ = Describe("Custom Export Main Test", func() {
 			args = append(args, "-log.level="+logLevel)
 
 			exporter := failRunner{
-				Name:       "custom_exporter",
-				Command:    exec.Command(binaryPath, args...),
-				StartCheck: "Config file parameter must be provided",
+				Name:        "custom_exporter",
+				Command:     exec.Command(binaryPath, args...),
+				StartCheck:  "Config file parameter must be provided",
+				existStatus: 1,
 			}
-			process := ifrit.Invoke(exporter)
-			ginkgomon.Kill(process) // this is only if incorrect implementation leaves process running
+			process = ifrit.Invoke(exporter)
 		})
 	})
 
@@ -149,20 +156,20 @@ var _ = Describe("Custom Export Main Test", func() {
 			args = append(args, "-log.level="+logLevel)
 
 			exporter := failRunner{
-				Name:       "custom_exporter",
-				Command:    exec.Command(binaryPath, args...),
-				StartCheck: "no such file or directory",
+				Name:        "custom_exporter",
+				Command:     exec.Command(binaryPath, args...),
+				StartCheck:  "no such file or directory",
+				existStatus: 1,
 			}
 
-			process := ifrit.Invoke(exporter)
-			ginkgomon.Kill(process) // this is only if incorrect implementation leaves process running
+			process = ifrit.Invoke(exporter)
 		})
 	})
 
 	Context("Has required args", func() {
 		BeforeEach(func() {
 			listenAddr = "0.0.0.0:" + strconv.Itoa(9209+GinkgoParallelNode())
-			configPath = "example.yml"
+			configPath = "example_shell.yml"
 			metricRoute = "/metrics"
 
 			args = append(args, "-web.listen-address="+listenAddr)
@@ -170,18 +177,15 @@ var _ = Describe("Custom Export Main Test", func() {
 			args = append(args, "-web.telemetry-path="+metricRoute)
 			args = append(args, "-log.level="+logLevel)
 
-			exporterCustom := ginkgomon.New(ginkgomon.Config{
+			exporter := failRunner{
 				Name:              "custom_exporter",
 				Command:           exec.Command(binaryPath, args...),
 				StartCheck:        "Listening",
 				StartCheckTimeout: 30 * time.Second,
-			})
+				existStatus:       137,
+			}
 
-			process = ginkgomon.Invoke(exporterCustom)
-		})
-
-		AfterEach(func() {
-			ginkgomon.Kill(process)
+			process = ifrit.Invoke(exporter)
 		})
 
 		It("should listen on the given address and return the landing page", func() {
@@ -215,9 +219,9 @@ var _ = Describe("Custom Export Main Test", func() {
 
 			//println(string(body))
 
-			Expect(string(body)).To(ContainSubstring("custom_shell_custom_metric_shell{animals=\"beef\",id=\"2\"} 256"))
-			Expect(string(body)).To(ContainSubstring("custom_shell_custom_metric_shell{animals=\"chicken\",id=\"1\"} 128"))
-			Expect(string(body)).To(ContainSubstring("custom_shell_custom_metric_shell{animals=\"snails\",id=\"3\"} 14"))
+			Expect(string(body)).To(ContainSubstring("custom_bash_custom_metric_shell{animals=\"beef\",id=\"2\"} 256"))
+			Expect(string(body)).To(ContainSubstring("custom_bash_custom_metric_shell{animals=\"chicken\",id=\"1\"} 128"))
+			Expect(string(body)).To(ContainSubstring("custom_bash_custom_metric_shell{animals=\"snails\",id=\"3\"} 14"))
 		})
 
 	})

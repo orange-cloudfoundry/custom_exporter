@@ -1,11 +1,11 @@
 package custom_config_test
 
 import (
-. "github.com/onsi/ginkgo"
-. "github.com/onsi/gomega"
-"github.com/onsi/gomega/gexec"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gexec"
 
-"testing"
+	"testing"
 )
 
 var binaryPath string
@@ -24,4 +24,3 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 }, func(bytes []byte) {
 	binaryPath = string(bytes)
 })
-
