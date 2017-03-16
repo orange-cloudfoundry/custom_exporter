@@ -24,7 +24,6 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 
 	BeforeEach(func() {
 
-
 		wg = sync.WaitGroup{}
 		wg.Add(1)
 

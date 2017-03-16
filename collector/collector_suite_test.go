@@ -7,10 +7,10 @@ import (
 	"github.com/alicebob/miniredis"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
-	"testing"
-	"sync"
 	"os"
 	"strings"
+	"sync"
+	"testing"
 )
 
 var (
@@ -18,13 +18,13 @@ var (
 	redisServer *miniredis.Miniredis
 	ch          chan prometheus.Metric
 	ds          chan *prometheus.Desc
-	wg 	    sync.WaitGroup
+	wg          sync.WaitGroup
 )
 
-func init()  {
+func init() {
 	find := false
 
-	for _,v := range os.Args {
+	for _, v := range os.Args {
 		if strings.Contains(v, "log.level") {
 			find = true
 			break

@@ -5,17 +5,17 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 
-	"testing"
 	"os"
 	"strings"
+	"testing"
 )
 
 var binaryPath string
 
-func init()  {
+func init() {
 	find := false
 
-	for _,v := range os.Args {
+	for _, v := range os.Args {
 		if strings.Contains(v, "log.level") {
 			find = true
 			break
