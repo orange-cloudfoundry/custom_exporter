@@ -129,12 +129,21 @@ func (e *CollectorRedis) Run(ch chan<- prometheus.Metric) error {
 		}
 	}
 
-	log.Debugf("Add Metric Tag '%s' / TagValue '%s' / Value '%v'", mapping, labelVal, metricVal)
+	prom_desc := PromDesc(e)
+	log.Debugf("Add Metric \"%s\" : Tag '%s' / TagValue '%s' / Value '%v'", prom_desc, mapping, labelVal, metricVal)
 
-	ch <- prometheus.MustNewConstMetric(
-		prometheus.NewDesc(PromDesc(e), CollectorBashDesc, mapping, nil),
+	metric := prometheus.MustNewConstMetric(
+		prometheus.NewDesc(prom_desc, CollectorBashDesc, mapping, nil),
 		e.metricsConfig.Value_type, metricVal, labelVal...,
 	)
+
+	select {
+	case ch <- metric:
+		log.Debug("Return no error...")
+		return nil
+	default:
+		log.Info("Cannot write to channel...")
+	}
 
 	return err
 }
@@ -231,7 +240,7 @@ func (e CollectorRedis) redisClient() (*redis.Client, error) {
 	log.Debugf("Starting client redis for metrics \"%s\", with params : %v", e.metricsConfig.Name, redisOpt)
 	clt = redis.NewClient(&redisOpt)
 
-	return clt, err
+	return clt, e.redisPing(clt)
 }
 
 func (e CollectorRedis) redisPing(client *redis.Client) error {

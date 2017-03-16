@@ -136,9 +136,15 @@ func (e *CollectorHelper) scrape(ch chan<- prometheus.Metric) {
 
 func PromDesc(collectorCustom CollectorCustom) string {
 	log.Debugln("Call Generic PromDesc")
-	return prometheus.BuildFQName(
-		custom_config.Namespace,
-		collectorCustom.Name(),
-		strings.ToLower(collectorCustom.Config().Name),
-	)
+
+	var namespace string
+	var subsystem string
+	var name string
+
+	namespace = custom_config.Namespace
+	subsystem = collectorCustom.Name()
+	name = strings.ToLower(collectorCustom.Config().Name)
+
+	log.Debugf("Calling PromDesc with namespace \"%s\", subsystem \"%s\" and name \"%s\"", namespace, subsystem, name)
+	return prometheus.BuildFQName(namespace, subsystem, name)
 }

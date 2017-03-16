@@ -167,12 +167,26 @@ func (e *CollectorBash) parseLine(ch chan<- prometheus.Metric, fields []string) 
 		}
 	}
 
-	log.Debugf("Metric \"%s\" Add Metric Tag '%s' / TagValue '%s' / Value '%v'", e.metricsConfig.Name, mapping, labelVal, metricVal)
+	if err != nil {
+		log.Debugf("Return error : '%s'", err.Error())
+		return err
+	}
 
-	ch <- prometheus.MustNewConstMetric(
-		prometheus.NewDesc(PromDesc(e), CollectorBashDesc, mapping, nil),
+	prom_desc := PromDesc(e)
+	log.Debugf("Add Metric \"%s\" : Tag '%s' / TagValue '%s' / Value '%v'", prom_desc, mapping, labelVal, metricVal)
+
+	metric := prometheus.MustNewConstMetric(
+		prometheus.NewDesc(prom_desc, CollectorBashDesc, mapping, nil),
 		e.metricsConfig.Value_type, metricVal, labelVal...,
 	)
+
+	select {
+	case ch <- metric:
+		log.Debug("Return no error...")
+		return nil
+	default:
+		log.Info("Cannot write to channel...")
+	}
 
 	return err
 }
