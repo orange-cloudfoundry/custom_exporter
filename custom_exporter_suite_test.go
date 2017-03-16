@@ -6,9 +6,26 @@ import (
 	"github.com/onsi/gomega/gexec"
 
 	"testing"
+	"os"
+	"strings"
 )
 
 var binaryPath string
+
+func init()  {
+	find := false
+
+	for _,v := range os.Args {
+		if strings.Contains(v, "log.level") {
+			find = true
+			break
+		}
+	}
+
+	if !find {
+		os.Args = append(os.Args, "-log.level=debug")
+	}
+}
 
 func TestCustomExporter(t *testing.T) {
 	RegisterFailHandler(Fail)

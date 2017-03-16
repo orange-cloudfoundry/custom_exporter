@@ -8,6 +8,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"net/url"
+	"sync"
 )
 
 var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
@@ -22,6 +23,11 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 	)
 
 	BeforeEach(func() {
+
+
+		wg = sync.WaitGroup{}
+		wg.Add(1)
+
 		config, err = custom_config.NewConfig("../example_with_error.yml")
 
 		var dsn *url.URL
@@ -40,6 +46,7 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 			config.Metrics[k] = m
 		}
 	})
+
 	Context("When giving a valid config file with custom_metric_redis", func() {
 
 		It("should have a valid config object", func() {
@@ -74,36 +81,18 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 				Expect(colRedis.Name()).To(Equal(collector.CollectorRedisName))
 				Expect(colRedis.Desc()).To(Equal(collector.CollectorRedisDesc))
 			})
-			/*
-				It("should return an error when call Run", func() {
-					go func() {
-						defer GinkgoRecover()
-						log.Debugln("Calling Run")
-						//Expect(colRedis.Run(ch)).To(HaveOccurred())
-						colRedis.Run(ch)
-						log.Debugln("Run called...")
-					}()
-					//<-ch
-				})
-			*/
-			It("should have capabilities to call the Collect funct", func() {
-				go func() {
-					defer GinkgoRecover()
-					log.Debugln("Calling Collect")
-					collect.Collect(ch)
-					log.Debugln("Collect called...")
-				}()
-				<-ch
-			})
 
-			It("should have capabilities to call the Describe funct", func() {
+			It("should return an error when call Run", func() {
 				go func() {
-					defer GinkgoRecover()
-					log.Debugln("Calling Describe")
-					collect.Describe(ds)
-					log.Debugln("Describe called...")
+					defer func() {
+						GinkgoRecover()
+						wg.Done()
+					}()
+					log.Infoln("Calling Run")
+					Expect(colRedis.Run(ch)).To(HaveOccurred())
+					log.Infoln("Run called...")
 				}()
-				<-ch
+				wg.Wait()
 			})
 		})
 
@@ -127,32 +116,15 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 
 			It("should not return an error when call Run", func() {
 				go func() {
-					defer GinkgoRecover()
-					log.Debugln("Calling Run")
+					defer func() {
+						GinkgoRecover()
+						wg.Done()
+					}()
+					log.Infoln("Calling Run")
 					Expect(colRedis.Run(ch)).ToNot(HaveOccurred())
-					//colRedis.Run(ch)
-					log.Debugln("Run called...")
+					log.Infoln("Run called...")
 				}()
-				<-ch
-			})
-
-			It("should have capabilities to call the Collect funct", func() {
-				go func() {
-					defer GinkgoRecover()
-					log.Debugln("Calling Collect")
-					collect.Collect(ch)
-					log.Debugln("Collect called...")
-				}()
-				<-ch
-			})
-			It("should have capabilities to call the Describe funct", func() {
-				go func() {
-					defer GinkgoRecover()
-					log.Debugln("Calling Describe")
-					collect.Describe(ds)
-					log.Debugln("Describe called...")
-				}()
-				<-ch
+				wg.Wait()
 			})
 		})
 	})

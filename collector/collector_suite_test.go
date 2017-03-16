@@ -8,6 +8,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"testing"
+	"sync"
+	"os"
+	"strings"
 )
 
 var (
@@ -15,7 +18,23 @@ var (
 	redisServer *miniredis.Miniredis
 	ch          chan prometheus.Metric
 	ds          chan *prometheus.Desc
+	wg 	    sync.WaitGroup
 )
+
+func init()  {
+	find := false
+
+	for _,v := range os.Args {
+		if strings.Contains(v, "log.level") {
+			find = true
+			break
+		}
+	}
+
+	if !find {
+		os.Args = append(os.Args, "-log.level=debug")
+	}
+}
 
 func TestCustomExporter(t *testing.T) {
 	RegisterFailHandler(Fail)
