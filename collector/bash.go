@@ -1,16 +1,15 @@
 package collector
 
 import (
-	"bytes"
-	"fmt"
 	"github.com/orange-cloudfoundry/custom_exporter/custom_config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
-	"io"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
+	"regexp"
+	"syscall"
 )
 
 const (
@@ -54,31 +53,34 @@ func (e CollectorBash) Run(ch chan<- prometheus.Metric) error {
 	var output []byte
 	var err error
 	var command string
+	var args []string
+	var cmd *exec.Cmd
+	var sysCred syscall.SysProcAttr
+	var useCred bool
 
-	var bufInput bytes.Buffer
-	var bufOutput bytes.Buffer
+	os.Setenv("CREDENTIALS_NAME", e.metricsConfig.Credential.Name)
+	os.Setenv("CREDENTIALS_COLLECTOR", e.metricsConfig.Credential.Collector)
+	os.Setenv("CREDENTIALS_DSN", e.metricsConfig.Credential.Dsn)
+	os.Setenv("CREDENTIALS_PATH", e.metricsConfig.Credential.Path)
+	os.Setenv("CREDENTIALS_URI", e.metricsConfig.Credential.Uri)
 
-	env := os.Environ()
-	env = append(env, fmt.Sprintf("CREDENTIALS_NAME=%s", e.metricsConfig.Credential.Name))
-	env = append(env, fmt.Sprintf("CREDENTIALS_COLLECTOR=%s", e.metricsConfig.Credential.Collector))
-	env = append(env, fmt.Sprintf("CREDENTIALS_DSN=%s", e.metricsConfig.Credential.Dsn))
-	env = append(env, fmt.Sprintf("CREDENTIALS_PATH=%s", e.metricsConfig.Credential.Path))
-	env = append(env, fmt.Sprintf("CREDENTIALS_URI=%s", e.metricsConfig.Credential.Uri))
 
-	bufInput.Reset()
-	bufOutput.Reset()
+	if e.metricsConfig.Credential.User != "" {
+		useCred = true
+		creduser := e.metricsConfig.CredentialUser()
+		sysCred = syscall.SysProcAttr{Credential: &syscall.Credential{Uid: creduser.UidInt(), Gid: creduser.GidInt()}}
+	} else {
+		useCred = false
+	}
+
+	regexCmd := regexp.MustCompile("'.+'|\".+\"|\\S+")
 
 	for _, c := range e.metricsConfig.Commands {
 
-		f := strings.Split(c, " ")
+		args = regexCmd.FindAllString(c, -1)
+		command, args = args[0], args[1:]
 
-		if len(f) > 1 {
-			command, f = f[0], f[1:]
-		} else {
-			command = f[0]
-			f = make([]string, 0)
-		}
-
+		log.Debugf("Parsed command : %s -- %v", command, args)
 		log.Debugf("Checking command/script exists : \"%s\"...", command)
 
 		_, err = exec.LookPath(command)
@@ -87,30 +89,30 @@ func (e CollectorBash) Run(ch chan<- prometheus.Metric) error {
 			return err
 		}
 
-		log.Debugf("Running command \"%s\" with params \"%s\"...", command, strings.Join(f, " "))
+		log.Debugf("Running command \"%s\" with params \"%s\"...", command, args)
 
-		bufInput.Reset()
-		io.Copy(&bufInput, &bufOutput)
-		bufOutput.Reset()
 
-		cmd := exec.Command(command, f...)
-		cmd.Env = env
-		cmd.Stdin = &bufInput
-		cmd.Stdout = &bufOutput
+		//config the command statement, stding (use last output) and the env vars
+		cmd = exec.Command(command, args...)
+		cmd.Env = os.Environ()
+		cmd.Stdin = strings.NewReader(string(output))
 
-		err = cmd.Run()
-
-		if err != nil {
-			log.Errorf("Error with metric \"%s\" while running command \"%s\" : %s", e.metricsConfig.Name, c, err.Error())
-			return err
+		if useCred {
+			cmd.SysProcAttr = &sysCred
 		}
 
-		output = bufOutput.Bytes()
+		// run the command
+		output, err = cmd.CombinedOutput()
+
+		if err != nil {
+			log.Errorf("Error with metric \"%s\" while running command \"%s\" : %v : %v", e.metricsConfig.Name, c, err, string(output))
+			return err
+		}
 
 		log.Debugf("Result command \"%s\" : \"%s\"", command, string(output))
 	}
 
-	log.Debugf("Run metric \"%s\" command '%s', result:", e.metricsConfig.Name, command)
+	log.Debugf("Run metric \"%s\" command '%s'", e.metricsConfig.Name, command)
 	log.Debugln("Result:", "\n"+string(output))
 
 	return e.parse(ch, string(output))

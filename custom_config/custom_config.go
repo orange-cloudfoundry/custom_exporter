@@ -5,6 +5,9 @@ import (
 	"github.com/prometheus/common/log"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"os/user"
+	"strings"
+	"strconv"
 )
 
 // Metric name parts.
@@ -60,6 +63,10 @@ type Config struct {
 	Metrics map[string]MetricsItem
 }
 
+type CredentialsUser struct {
+	user.User
+}
+
 func NewConfig(configFile string) (*Config, error) {
 	var contentFile []byte
 	var err error
@@ -77,7 +84,7 @@ func NewConfig(configFile string) (*Config, error) {
 	myCnf := new(Config)
 	myCnf.metricsList(ymlCnf)
 
-	log.Debugln("config loaded:\n", string(contentFile))
+	//log.Debugln("config loaded:\n", string(contentFile))
 
 	return myCnf, nil
 }
@@ -147,3 +154,47 @@ func (m MetricsItem) SeparatorValue() string {
 
 	return sep
 }
+
+func (m MetricsItem) CredentialUser() *CredentialsUser {
+	usr := strings.TrimSpace(m.Credential.User)
+
+	if len(usr) == 0 {
+		return currentUser()
+	}
+
+	if myUser, err := user.LookupId(usr); err == nil {
+		return &CredentialsUser{User: *myUser}
+	}
+
+	if myUser, err := user.Lookup(usr); err == nil {
+		return &CredentialsUser{User: *myUser}
+	}
+
+	return currentUser()
+}
+
+func currentUser() *CredentialsUser {
+	var myUser *user.User
+	var err error
+
+	if myUser, err = user.Current(); err != nil {
+		log.Fatalf("Error on retrieve current system user : %s", err.Error())
+	}
+
+	return &CredentialsUser{User: *myUser}
+}
+
+func (c CredentialsUser) UidInt() uint32 {
+	if uid,err := strconv.ParseUint(c.Uid, 10, 32); err == nil {
+		return uint32(uid)
+	}
+	return 0
+}
+
+func (c CredentialsUser) GidInt() uint32 {
+	if gid,err := strconv.ParseUint(c.Gid, 10, 32); err == nil {
+		return uint32(gid)
+	}
+	return 0
+}
+
