@@ -6,8 +6,8 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os/user"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 // Metric name parts.
@@ -185,16 +185,15 @@ func currentUser() *CredentialsUser {
 }
 
 func (c CredentialsUser) UidInt() uint32 {
-	if uid,err := strconv.ParseUint(c.Uid, 10, 32); err == nil {
+	if uid, err := strconv.ParseUint(c.Uid, 10, 32); err == nil {
 		return uint32(uid)
 	}
 	return 0
 }
 
 func (c CredentialsUser) GidInt() uint32 {
-	if gid,err := strconv.ParseUint(c.Gid, 10, 32); err == nil {
+	if gid, err := strconv.ParseUint(c.Gid, 10, 32); err == nil {
 		return uint32(gid)
 	}
 	return 0
 }
-

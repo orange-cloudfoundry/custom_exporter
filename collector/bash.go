@@ -6,9 +6,9 @@ import (
 	"github.com/prometheus/common/log"
 	"os"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
-	"regexp"
 	"syscall"
 )
 
@@ -64,7 +64,6 @@ func (e CollectorBash) Run(ch chan<- prometheus.Metric) error {
 	os.Setenv("CREDENTIALS_PATH", e.metricsConfig.Credential.Path)
 	os.Setenv("CREDENTIALS_URI", e.metricsConfig.Credential.Uri)
 
-
 	if e.metricsConfig.Credential.User != "" {
 		useCred = true
 		creduser := e.metricsConfig.CredentialUser()
@@ -90,7 +89,6 @@ func (e CollectorBash) Run(ch chan<- prometheus.Metric) error {
 		}
 
 		log.Debugf("Running command \"%s\" with params \"%s\"...", command, args)
-
 
 		//config the command statement, stding (use last output) and the env vars
 		cmd = exec.Command(command, args...)
