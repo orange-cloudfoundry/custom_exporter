@@ -70,8 +70,4 @@ var _ = SynchronizedAfterSuite(func() {
 	log.Infof("Stopping Miniredis listinning on Addr \"%s\" ...", redisAddr)
 	redisServer.Close()
 
-}, func() {
-	log.Infoln("Closing Channels...")
-	close(ch)
-	close(ds)
-})
+}, func() {})

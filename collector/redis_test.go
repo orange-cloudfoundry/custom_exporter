@@ -91,6 +91,7 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 					Expect(colRedis.Run(ch)).To(HaveOccurred())
 					log.Infoln("Run called...")
 				}()
+
 				wg.Wait()
 			})
 		})
@@ -123,6 +124,7 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 					Expect(colRedis.Run(ch)).ToNot(HaveOccurred())
 					log.Infoln("Run called...")
 				}()
+
 				wg.Wait()
 			})
 		})

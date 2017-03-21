@@ -61,6 +61,8 @@ func createNewCollector(m *custom_config.MetricsItem) prometheus.Collector {
 	switch m.Credential.Collector {
 	case "bash":
 		col, err = collector.NewPrometheusBashCollector(*m)
+	case "mysql":
+		col, err = collector.NewPrometheusMysqlCollector(*m)
 	case "redis":
 		col, err = collector.NewPrometheusRedisCollector(*m)
 	default:

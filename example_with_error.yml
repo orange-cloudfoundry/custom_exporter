@@ -4,7 +4,7 @@
     type: bash
   - name: mysql_connector
     type: mysql
-    dsn: mysql://root:passwor@127.0.0.1:3306/mydb
+    dsn: mysql://root:password@tcp(127.0.0.1:3306)/mydb
   - name: redis_connector
     type: redis
     dsn: tcp://:password@127.0.0.1:6789/0
