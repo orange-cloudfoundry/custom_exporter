@@ -38,6 +38,52 @@ var configFile = flag.String(
 	"Path to config.yml file to read custom exporter definition.",
 )
 
+func init() {
+	prometheus.MustRegister(version.NewCollector(custom_config.Namespace + "_" + custom_config.Exporter))
+}
+
+func main() {
+	flag.Parse()
+
+	if *showVersion {
+		fmt.Fprintln(os.Stdout, version.Print(custom_config.Namespace+"_"+custom_config.Exporter))
+		os.Exit(0)
+	}
+
+	if len(*configFile) < 1 {
+		err := errors.New("Config file parameter must be provided")
+		fmt.Fprintln(os.Stdout, version.Print(custom_config.Namespace+"_"+custom_config.Exporter))
+		flag.Usage()
+		log.Errorln("Error:", err.Error())
+		os.Exit(0)
+	}
+
+	if _, err := os.Stat(*configFile); err != nil {
+		log.Fatalln("Error:", err.Error())
+	}
+
+	log.Infoln("Starting "+custom_config.Namespace+"_"+custom_config.Exporter, version.Info())
+	log.Infoln("Build context", version.BuildContext())
+
+	var myConfig *custom_config.Config
+
+	if cnf, err := custom_config.NewConfig(*configFile); err != nil {
+		log.Fatalf("FATAL: %s", err.Error())
+	} else {
+		myConfig = cnf
+	}
+
+	prometheus.MustRegister(createListCollectors(myConfig)...)
+
+	http.Handle(*metricPath, prometheus.Handler())
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`<html><head><title>Custom exporter</title></head><body><h1>Custom exporter</h1><p><a href='` + *metricPath + `'>Metrics</a></p></body></html>`))
+	})
+
+	log.Infoln("Listening on", *listenAddress)
+	log.Fatal(http.ListenAndServe(*listenAddress, nil))
+}
+
 func createListCollectors(c *custom_config.Config) []prometheus.Collector {
 	var result []prometheus.Collector
 
@@ -75,47 +121,4 @@ func createNewCollector(m *custom_config.MetricsItem) prometheus.Collector {
 	}
 
 	return col
-}
-
-func init() {
-	prometheus.MustRegister(version.NewCollector(custom_config.Namespace + "_" + custom_config.Exporter))
-}
-
-func main() {
-	flag.Parse()
-
-	if *showVersion {
-		fmt.Fprintln(os.Stdout, version.Print(custom_config.Namespace+"_"+custom_config.Exporter))
-		os.Exit(0)
-	}
-
-	if len(*configFile) < 1 {
-		err := errors.New("Config file parameter must be provided")
-		log.Fatalln("Error:", err.Error())
-	}
-
-	if _, err := os.Stat(*configFile); err != nil {
-		log.Fatalln("Error:", err.Error())
-	}
-
-	log.Infoln("Starting "+custom_config.Namespace+"_"+custom_config.Exporter, version.Info())
-	log.Infoln("Build context", version.BuildContext())
-
-	var myConfig *custom_config.Config
-
-	if cnf, err := custom_config.NewConfig(*configFile); err != nil {
-		log.Fatalf("FATAL: %s", err.Error())
-	} else {
-		myConfig = cnf
-	}
-
-	prometheus.MustRegister(createListCollectors(myConfig)...)
-
-	http.Handle(*metricPath, prometheus.Handler())
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`<html><head><title>Custom exporter</title></head><body><h1>Custom exporter</h1><p><a href='` + *metricPath + `'>Metrics</a></p></body></html>`))
-	})
-
-	log.Infoln("Listening on", *listenAddress)
-	log.Fatal(http.ListenAndServe(*listenAddress, nil))
 }
