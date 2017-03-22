@@ -219,9 +219,9 @@ var _ = Describe("Custom Export Main Test", func() {
 
 			//println(string(body))
 
-			Expect(string(body)).To(ContainSubstring("custom_bash_custom_metric_shell{animals=\"beef\",id=\"2\"} 256"))
-			Expect(string(body)).To(ContainSubstring("custom_bash_custom_metric_shell{animals=\"chicken\",id=\"1\"} 128"))
-			Expect(string(body)).To(ContainSubstring("custom_bash_custom_metric_shell{animals=\"snails\",id=\"3\"} 14"))
+			Expect(string(body)).To(ContainSubstring("custom_custom_metric_shell{animals=\"beef\",id=\"2\"} 256"))
+			Expect(string(body)).To(ContainSubstring("custom_custom_metric_shell{animals=\"chicken\",id=\"1\"} 128"))
+			Expect(string(body)).To(ContainSubstring("custom_custom_metric_shell{animals=\"snails\",id=\"3\"} 14"))
 		})
 
 	})

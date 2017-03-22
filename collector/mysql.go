@@ -143,7 +143,7 @@ func (e *CollectorMysql) parseResult(ch chan<- prometheus.Metric, res *sql.Rows)
 		log.Debugf("Add Metric \"%s\" : Tag '%s' / TagValue '%s' / Value '%v'", prom_desc, tagLabels, tagValues, valMetric)
 
 		metric := prometheus.MustNewConstMetric(
-			prometheus.NewDesc(prom_desc, CollectorBashDesc, tagLabels, nil),
+			prometheus.NewDesc(prom_desc, e.metricsConfig.Name, tagLabels, nil),
 			e.metricsConfig.Value_type, valMetric, tagValues...,
 		)
 

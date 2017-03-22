@@ -176,7 +176,7 @@ func (e *CollectorBash) parseLine(ch chan<- prometheus.Metric, fields []string) 
 	log.Debugf("Add Metric \"%s\" : Tag '%s' / TagValue '%s' / Value '%v'", prom_desc, mapping, labelVal, metricVal)
 
 	metric := prometheus.MustNewConstMetric(
-		prometheus.NewDesc(prom_desc, CollectorBashDesc, mapping, nil),
+		prometheus.NewDesc(prom_desc, e.metricsConfig.Name, mapping, nil),
 		e.metricsConfig.Value_type, metricVal, labelVal...,
 	)
 

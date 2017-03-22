@@ -25,38 +25,33 @@ type CollectorCustom interface {
 }
 
 func NewCollectorHelper(collectorCustom CollectorCustom) *CollectorHelper {
-	collectorName := collectorCustom.Name()
 	configName := collectorCustom.Config().Name
-
-	if len(collectorName) < 1 {
-		collectorName = custom_config.Exporter
-	}
 
 	helper := &CollectorHelper{
 		duration: prometheus.NewGauge(prometheus.GaugeOpts{
 			Namespace: custom_config.Namespace,
-			Subsystem: collectorName,
+			Subsystem: configName,
 			Name:      "last_scrape_duration_seconds",
 			Help:      "Duration of the last scrape of metrics from " + configName,
 		}),
 
 		error: prometheus.NewGauge(prometheus.GaugeOpts{
 			Namespace: custom_config.Namespace,
-			Subsystem: collectorName,
+			Subsystem: configName,
 			Name:      "last_scrape_error",
 			Help:      "Whether the last scrape of metrics from " + configName + " resulted in an error (1 for error, 0 for success).",
 		}),
 
 		totalScrapes: prometheus.NewCounter(prometheus.CounterOpts{
 			Namespace: custom_config.Namespace,
-			Subsystem: collectorName,
+			Subsystem: configName,
 			Name:      "scrapes_total",
 			Help:      "Total number of times " + configName + " was scraped for metrics.",
 		}),
 
 		scrapeErrors: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Namespace: custom_config.Namespace,
-			Subsystem: collectorName,
+			Subsystem: configName,
 			Name:      "scrape_errors_total",
 			Help:      "Total number of times an error occurred scraping a " + configName,
 		}, []string{"collector"}),
@@ -142,7 +137,7 @@ func PromDesc(collectorCustom CollectorCustom) string {
 	var name string
 
 	namespace = custom_config.Namespace
-	subsystem = collectorCustom.Name()
+	//subsystem = collectorCustom.Name()
 	name = strings.ToLower(collectorCustom.Config().Name)
 
 	log.Debugf("Calling PromDesc with namespace \"%s\", subsystem \"%s\" and name \"%s\"", namespace, subsystem, name)

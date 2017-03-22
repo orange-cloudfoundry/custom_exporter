@@ -133,7 +133,7 @@ func (e *CollectorRedis) Run(ch chan<- prometheus.Metric) error {
 	log.Debugf("Add Metric \"%s\" : Tag '%s' / TagValue '%s' / Value '%v'", prom_desc, mapping, labelVal, metricVal)
 
 	metric := prometheus.MustNewConstMetric(
-		prometheus.NewDesc(prom_desc, CollectorBashDesc, mapping, nil),
+		prometheus.NewDesc(prom_desc, e.metricsConfig.Name, mapping, nil),
 		e.metricsConfig.Value_type, metricVal, labelVal...,
 	)
 
