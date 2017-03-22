@@ -4,6 +4,21 @@
 
 This project is aimed to retrieve specific metrics that can't be found in dedicated exporters. Metrics that will be given by this exporter will be configured in the deployment manifest to make it easy to use and reusable.
 
+## Build from source 
+to build from source, use promu tools : https://github.com/prometheus/promu
+```bash
+go get github.com/prometheus/promu
+cd $GOPATH/src/github.com/prometheus/promu
+make
+```
+
+and use this command : 
+```bash
+go get github.com/orange-cloudfoundry/custom_exporter
+cd $GOPATH/src/github.com/orange-cloudfoundry/custom_exporter
+$GOPATH/bin/promu build --prefix $GOPATH/bin
+```
+
 ## Configuration 
 
 The configuration is split in 2 separate parts :
