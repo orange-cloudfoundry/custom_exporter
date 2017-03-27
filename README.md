@@ -2,10 +2,28 @@
 
 ## Intro
 
-This project is aimed to retrieve specific metrics that can't be found in dedicated exporters. Metrics that will be given by this exporter will be configured in the deployment manifest to make it easy to use and reusable.
+This project is aimed to retrieve specific metrics that can't be found in dedicated exporters. 
+
+This exporter work with a dedicated config file to define all needed metrics. 
+Each dedicated metrics will using a collector to access to data and custom commands to be run into this collector.
+This dedicated commands (list) must in final result expose data to be parsed to extract : a mandatory float value and a optional list of tags (strings : labels & value)
+
+A collector is define by his type (bash, mysql, ...) and his credentials (data source name, user, password, uri, ...). 
+Each type of collector could use his own config option. 
+
+The dedicated metrics are exposed with a prefix "custom" and the name of the dedicated metrics into the config file.
+ 
+## How it's work
+The main process will load the config file and will register a dedicated collector into prometheus client framework for each metrics.
+Each metric is composed of a collector helper who's include a specific type collector defined into the config file
+
+On each call to the metrics path of the exporter (eg. http://localhost:9213/metrics/), the main process will call each registered prometheus collectors in multithreading and grab all results to expose them to the caller.
+
+If a metrics is not available (errors on running command, result empty, ...) a minimal result will be expose. When this metrics rise up, the result will be expose.
+If the config of a metrics is not well defined, the metrics will be not registered into the main process.
 
 ## Build from source 
-to build from source, use promu tools : https://github.com/prometheus/promu
+To build from source, use promu tools : https://github.com/prometheus/promu
 ```bash
 go get github.com/prometheus/promu
 cd $GOPATH/src/github.com/prometheus/promu
@@ -22,27 +40,41 @@ $GOPATH/bin/promu build --prefix $GOPATH/bin
 ## Configuration 
 
 The configuration is split in 2 separate parts :
- * credentials : provide credentials ans data type to the custom export.
- * metrics : provide commands that are to be run to retrieve metrics and key-value mapping
+ * **credentials** : provide credentials ans data type to the custom export.
+ * **metrics** : provide commands that are to be run to retrieve metrics and key-value mapping
 
 #### Credential
-The credential section is composed as :
-  * name : name of the credential
-  * type : collector type (one of existing collector : redis, mysql, bash, ...). If the type is not understand the metrics connected to this credential will be ignored
-  * dsn : the Data Source Name format as following : 
+The credential section is composed at least as :
+
+  * **name** : name of the credential 
+  * **type** : collector type (one of existing collector : redis, mysql, bash, ...). If the type is not understand the metrics connected to this credential will be ignored
+  
+This other options depends of collectors :
+
+| Option Name | Description | Collector |
+| :---------: | :---------- | :-------: |
+| dsn | the DSN (Data Source Name) is an url's like usually use to connect to database | mysql, redis | 
+| user | the user to run command in shell process | bash |
+
+the DSN form example for each collector : 
+
     * mysql : driver://user:password@protocol(addr:port|[addr_ip_v6]:port|socket)/database
     * redis : protocol://<empty>:password@host:port/database
-  * user : the user to run bash command
  
 #### Metric
-The metrics section is composed as :
-  * name : name of the metrics
-  * commands : list of command to run to retrieve the metrics tags and value
-  * credential : the credentials's name to used in this metrics (cannot be null : collector type is include in the credential)
-  * mapping : the list of tags
-  * separator : the separator used in some collector like bash
-  * value_name : the name of the metric value key who's be found in result of command
-  * value_type : prometheus value type (COUNTER, GAUGE, UNTYPED)
+The metrics section is composed at least as :
+  * **name** : name of the metrics
+  * **commands** : list of command to run to retrieve the metrics tags and value
+  * **credential** : the credentials's name to used in this metrics (cannot be null : collector type is include in the credential)
+  * **value_type** : the prometheus value type (COUNTER, GAUGE, UNTYPED)
+  
+This others options are optionals : 
+
+| Option Name | Description | Collector |
+| :---------: | :---------- | :-------: |
+| mapping | the list of tags to be found in resultSet | all |
+| separator | the separator used in some collector like bash | bash |
+| value_name | the name of the metric value key who's be found in result of command | redis |
 
 ## Manifest & result examples
 ### First example
