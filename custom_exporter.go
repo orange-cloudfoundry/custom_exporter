@@ -6,13 +6,15 @@ import (
 	"net/http"
 	"os"
 
-	"errors"
 	"github.com/orange-cloudfoundry/custom_exporter/collector"
 	"github.com/orange-cloudfoundry/custom_exporter/custom_config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"github.com/prometheus/common/version"
 )
+
+var ArgsRequire []string
+var ArgsSeen map[string]bool
 
 var showVersion = flag.Bool(
 	"version",
@@ -22,7 +24,7 @@ var showVersion = flag.Bool(
 
 var listenAddress = flag.String(
 	"web.listen-address",
-	":9209",
+	":9213",
 	"Address to listen on for web interface and telemetry.",
 )
 
@@ -39,31 +41,31 @@ var configFile = flag.String(
 )
 
 func init() {
+	ArgsRequire = []string{
+		"collector.config",
+	}
+
+	ArgsSeen = make(map[string]bool, 0)
+
 	prometheus.MustRegister(version.NewCollector(custom_config.Namespace + "_" + custom_config.Exporter))
 }
 
 func main() {
-	flag.Parse()
+	fmt.Fprintln(os.Stdout, version.Info())
+	fmt.Fprintln(os.Stdout, version.BuildContext())
 
 	if *showVersion {
-		fmt.Fprintln(os.Stdout, version.Print(custom_config.Namespace+"_"+custom_config.Exporter))
 		os.Exit(0)
 	}
 
-	if len(*configFile) < 1 {
-		err := errors.New("Config file parameter must be provided")
-		fmt.Fprintln(os.Stdout, version.Print(custom_config.Namespace+"_"+custom_config.Exporter))
-		flag.Usage()
-		log.Errorln("Error:", err.Error())
-		os.Exit(0)
+	if ok := checkRequireArgs(); !ok {
+		os.Exit(2)
 	}
 
 	if _, err := os.Stat(*configFile); err != nil {
-		log.Fatalln("Error:", err.Error())
+		log.Errorln("Error:", err.Error())
+		os.Exit(2)
 	}
-
-	log.Infoln("Starting "+custom_config.Namespace+"_"+custom_config.Exporter, version.Info())
-	log.Infoln("Build context", version.BuildContext())
 
 	var myConfig *custom_config.Config
 
@@ -82,6 +84,30 @@ func main() {
 
 	log.Infoln("Listening on", *listenAddress)
 	log.Fatal(http.ListenAndServe(*listenAddress, nil))
+}
+
+func checkRequireArgs() bool {
+	var res bool
+
+	res = true
+
+	flag.Parse()
+	flag.Visit(func(f *flag.Flag) { ArgsSeen[f.Name] = true })
+
+	for _, req := range ArgsRequire {
+		if !ArgsSeen[req] {
+			fmt.Fprintf(os.Stderr, "missing required -%s argument/flag\n", req)
+			res = false
+		}
+	}
+
+	if !res {
+		fmt.Fprintf(os.Stdout, "")
+		fmt.Fprintf(os.Stdout, "")
+		flag.Usage()
+	}
+
+	return res
 }
 
 func createListCollectors(c *custom_config.Config) []prometheus.Collector {

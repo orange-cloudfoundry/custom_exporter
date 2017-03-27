@@ -141,8 +141,8 @@ var _ = Describe("Custom Export Main Test", func() {
 			exporter := failRunner{
 				Name:        "custom_exporter",
 				Command:     exec.Command(binaryPath, args...),
-				StartCheck:  "Config file parameter must be provided",
-				existStatus: 1,
+				StartCheck:  " missing required -collector.config argument/flag",
+				existStatus: 2,
 			}
 			process = ifrit.Invoke(exporter)
 		})
@@ -159,7 +159,7 @@ var _ = Describe("Custom Export Main Test", func() {
 				Name:        "custom_exporter",
 				Command:     exec.Command(binaryPath, args...),
 				StartCheck:  "no such file or directory",
-				existStatus: 1,
+				existStatus: 2,
 			}
 
 			process = ifrit.Invoke(exporter)
@@ -168,7 +168,7 @@ var _ = Describe("Custom Export Main Test", func() {
 
 	Context("Has required args", func() {
 		BeforeEach(func() {
-			listenAddr = "0.0.0.0:" + strconv.Itoa(9209+GinkgoParallelNode())
+			listenAddr = "0.0.0.0:" + strconv.Itoa(9213+GinkgoParallelNode())
 			configPath = "example_shell.yml"
 			metricRoute = "/metrics"
 
