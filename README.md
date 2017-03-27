@@ -40,17 +40,18 @@ The configuration is split in 2 separate parts:
 
 #### Credential
 The credential section is composed at least as:
-
   * **name**: name of the credential 
   * **type**: collector type (one of existing collector : redis, mysql, bash, ...). If the type is not understand the metrics connected to this credential will be ignored
   
 This other options depends of collectors:
+
 | Option Name | Description | Collector |
 | :---------: | :---------- | :-------: |
 | dsn | the DSN (Data Source Name) is an URL like string usually use to connect to database | mysql, redis | 
 | user | the user to run command in shell process | bash |
 
 The DSN form example for each collector: 
+
     * mysql: driver://user:password@protocol(addr:port|[addr_ip_v6]:port|socket)/database
     * redis: protocol://<empty>:password@host:port/database
  
