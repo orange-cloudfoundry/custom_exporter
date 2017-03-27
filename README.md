@@ -51,17 +51,20 @@ The credential section is composed at least as:
   * **type**: collector type (one of existing collector : redis, mysql, bash, ...). If the type is not understand the metrics connected to this credential will be ignored
   
 This other options depends of collectors:
+
 | Option Name | Description | Collector |
 | :---------: | :---------- | :-------: |
 | dsn | the DSN (Data Source Name) is an URL like string usually use to connect to database | mysql, redis | 
 | user | the user to run command in shell process | bash |
 
 The DSN form example for each collector: 
+
     * mysql: driver://user:password@protocol(addr:port|[addr_ip_v6]:port|socket)/database
     * redis: protocol://<empty>:password@host:port/database
  
 #### Metric
 The metrics section is composed at least as:
+
   * **name**: name of the metrics
   * **commands**: list of command to run to retrieve the metrics tags and value
   * **credential**: the credential's name to use in this metrics (cannot be null : collector type is include in the credential)
