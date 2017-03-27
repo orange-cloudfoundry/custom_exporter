@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/orange-cloudfoundry/custom_exporter/custom_config"
+	"github.com/orange-cloudfoundry/custom_exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"gopkg.in/redis.v5"
@@ -35,16 +35,16 @@ const (
 )
 
 type CollectorRedis struct {
-	metricsConfig custom_config.MetricsItem
+	metricsConfig config.MetricsItem
 }
 
-func NewCollectorRedis(config custom_config.MetricsItem) *CollectorRedis {
+func NewCollectorRedis(config config.MetricsItem) *CollectorRedis {
 	return &CollectorRedis{
 		metricsConfig: config,
 	}
 }
 
-func NewPrometheusRedisCollector(config custom_config.MetricsItem) (prometheus.Collector, error) {
+func NewPrometheusRedisCollector(config config.MetricsItem) (prometheus.Collector, error) {
 	var err error
 
 	myCol := NewCollectorHelper(NewCollectorRedis(config))
@@ -59,7 +59,7 @@ func NewPrometheusRedisCollector(config custom_config.MetricsItem) (prometheus.C
 	return myCol, myCol.Check(err)
 }
 
-func (e CollectorRedis) Config() custom_config.MetricsItem {
+func (e CollectorRedis) Config() config.MetricsItem {
 	return e.metricsConfig
 }
 

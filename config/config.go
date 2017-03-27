@@ -1,4 +1,4 @@
-package custom_config
+package config
 
 import (
 	"github.com/prometheus/client_golang/prometheus"

@@ -10,7 +10,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"github.com/orange-cloudfoundry/custom_exporter/collector"
-	"github.com/orange-cloudfoundry/custom_exporter/custom_config"
+	"github.com/orange-cloudfoundry/custom_exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -34,10 +34,10 @@ limitations under the License.
 
 var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 	var (
-		config   *custom_config.Config
+		cnf      *config.Config
 		colMysql *collector.CollectorMysql
 		collect  prometheus.Collector
-		metric   custom_config.MetricsItem
+		metric   config.MetricsItem
 
 		DBclient *sql.DB
 		DBmock   sqlmock.Sqlmock
@@ -50,7 +50,7 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 		wg = sync.WaitGroup{}
 		wg.Add(1)
 
-		config, err = custom_config.NewConfig("../example_with_error.yml")
+		cnf, err = config.NewConfig("../example_with_error.yml")
 
 		if DBclient, DBmock, err = sqlmock.New(); err != nil {
 			log.Fatalf("Error while trying to mock DB Mysql connection : %v", err)
@@ -65,7 +65,7 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 
 		Context("And giving an invalid config metric object", func() {
 			It("should found the invalid metric object", func() {
-				metric, isOk = config.Metrics["custom_metric_shell"]
+				metric, isOk = cnf.Metrics["custom_metric_shell"]
 				Expect(isOk).To(BeTrue())
 			})
 			It("should return an error when creating the collector", func() {
@@ -76,7 +76,7 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 
 		Context("And giving an valid config metric object with invalid command", func() {
 			It("should found the valid metric object", func() {
-				metric, isOk = config.Metrics["custom_metric_mysql_error"]
+				metric, isOk = cnf.Metrics["custom_metric_mysql_error"]
 				Expect(isOk).To(BeTrue())
 			})
 
@@ -111,7 +111,7 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 
 		Context("And giving a valid config metric object", func() {
 			It("should found the valid metric object", func() {
-				metric, isOk = config.Metrics["custom_metric_mysql"]
+				metric, isOk = cnf.Metrics["custom_metric_mysql"]
 				Expect(isOk).To(BeTrue())
 			})
 

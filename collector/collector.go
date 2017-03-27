@@ -3,7 +3,7 @@ package collector
 import (
 	"errors"
 	"fmt"
-	"github.com/orange-cloudfoundry/custom_exporter/custom_config"
+	"github.com/orange-cloudfoundry/custom_exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"strings"
@@ -37,7 +37,7 @@ type CollectorCustom interface {
 	Name() string
 	Desc() string
 	Run(ch chan<- prometheus.Metric) error
-	Config() custom_config.MetricsItem
+	Config() config.MetricsItem
 }
 
 func NewCollectorHelper(collectorCustom CollectorCustom) *CollectorHelper {
@@ -45,28 +45,28 @@ func NewCollectorHelper(collectorCustom CollectorCustom) *CollectorHelper {
 
 	helper := &CollectorHelper{
 		duration: prometheus.NewGauge(prometheus.GaugeOpts{
-			Namespace: custom_config.Namespace,
+			Namespace: config.Namespace,
 			Subsystem: configName,
 			Name:      "last_scrape_duration_seconds",
 			Help:      "Duration of the last scrape of metrics from " + configName,
 		}),
 
 		error: prometheus.NewGauge(prometheus.GaugeOpts{
-			Namespace: custom_config.Namespace,
+			Namespace: config.Namespace,
 			Subsystem: configName,
 			Name:      "last_scrape_error",
 			Help:      "Whether the last scrape of metrics from " + configName + " resulted in an error (1 for error, 0 for success).",
 		}),
 
 		totalScrapes: prometheus.NewCounter(prometheus.CounterOpts{
-			Namespace: custom_config.Namespace,
+			Namespace: config.Namespace,
 			Subsystem: configName,
 			Name:      "scrapes_total",
 			Help:      "Total number of times " + configName + " was scraped for metrics.",
 		}),
 
 		scrapeErrors: prometheus.NewCounterVec(prometheus.CounterOpts{
-			Namespace: custom_config.Namespace,
+			Namespace: config.Namespace,
 			Subsystem: configName,
 			Name:      "scrape_errors_total",
 			Help:      "Total number of times an error occurred scraping a " + configName,
@@ -152,7 +152,7 @@ func PromDesc(collectorCustom CollectorCustom) string {
 	var subsystem string
 	var name string
 
-	namespace = custom_config.Namespace
+	namespace = config.Namespace
 	//subsystem = collectorCustom.Name()
 	name = strings.ToLower(collectorCustom.Config().Name)
 

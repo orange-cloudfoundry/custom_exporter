@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/orange-cloudfoundry/custom_exporter/collector"
-	"github.com/orange-cloudfoundry/custom_exporter/custom_config"
+	"github.com/orange-cloudfoundry/custom_exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"github.com/prometheus/common/version"
@@ -63,7 +63,7 @@ func init() {
 
 	ArgsSeen = make(map[string]bool, 0)
 
-	prometheus.MustRegister(version.NewCollector(custom_config.Namespace + "_" + custom_config.Exporter))
+	prometheus.MustRegister(version.NewCollector(config.Namespace + "_" + config.Exporter))
 }
 
 func main() {
@@ -83,9 +83,9 @@ func main() {
 		os.Exit(2)
 	}
 
-	var myConfig *custom_config.Config
+	var myConfig *config.Config
 
-	if cnf, err := custom_config.NewConfig(*configFile); err != nil {
+	if cnf, err := config.NewConfig(*configFile); err != nil {
 		log.Fatalf("FATAL: %s", err.Error())
 	} else {
 		myConfig = cnf
@@ -126,7 +126,7 @@ func checkRequireArgs() bool {
 	return res
 }
 
-func createListCollectors(c *custom_config.Config) []prometheus.Collector {
+func createListCollectors(c *config.Config) []prometheus.Collector {
 	var result []prometheus.Collector
 
 	for _, cnf := range c.Metrics {
@@ -142,7 +142,7 @@ func createListCollectors(c *custom_config.Config) []prometheus.Collector {
 	return result
 }
 
-func createNewCollector(m *custom_config.MetricsItem) prometheus.Collector {
+func createNewCollector(m *config.MetricsItem) prometheus.Collector {
 	var col prometheus.Collector
 	var err error
 

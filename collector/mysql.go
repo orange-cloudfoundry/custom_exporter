@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/orange-cloudfoundry/custom_exporter/custom_config"
+	"github.com/orange-cloudfoundry/custom_exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 
@@ -36,23 +36,23 @@ const (
 
 type CollectorMysql struct {
 	client        *sql.DB
-	metricsConfig custom_config.MetricsItem
+	metricsConfig config.MetricsItem
 }
 
-func NewCollectorMysql(config custom_config.MetricsItem) *CollectorMysql {
+func NewCollectorMysql(config config.MetricsItem) *CollectorMysql {
 	return &CollectorMysql{
 		metricsConfig: config,
 	}
 }
 
-func NewPrometheusMysqlCollector(config custom_config.MetricsItem) (prometheus.Collector, error) {
+func NewPrometheusMysqlCollector(config config.MetricsItem) (prometheus.Collector, error) {
 	myCol := NewCollectorHelper(NewCollectorMysql(config))
 
 	log.Infof("Collector Added: Type '%s' / Name '%s' / Credentials '%s'", CollectorMysqlName, config.Name, config.Credential.Name)
 	return myCol, myCol.Check(nil)
 }
 
-func (e CollectorMysql) Config() custom_config.MetricsItem {
+func (e CollectorMysql) Config() config.MetricsItem {
 	return e.metricsConfig
 }
 

@@ -1,7 +1,7 @@
 package collector
 
 import (
-	"github.com/orange-cloudfoundry/custom_exporter/custom_config"
+	"github.com/orange-cloudfoundry/custom_exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"os"
@@ -34,16 +34,16 @@ const (
 )
 
 type CollectorBash struct {
-	metricsConfig custom_config.MetricsItem
+	metricsConfig config.MetricsItem
 }
 
-func NewCollectorBash(config custom_config.MetricsItem) *CollectorBash {
+func NewCollectorBash(config config.MetricsItem) *CollectorBash {
 	return &CollectorBash{
 		metricsConfig: config,
 	}
 }
 
-func NewPrometheusBashCollector(config custom_config.MetricsItem) (prometheus.Collector, error) {
+func NewPrometheusBashCollector(config config.MetricsItem) (prometheus.Collector, error) {
 	myCol := NewCollectorHelper(
 		NewCollectorBash(config),
 	)
@@ -53,7 +53,7 @@ func NewPrometheusBashCollector(config custom_config.MetricsItem) (prometheus.Co
 	return myCol, myCol.Check(nil)
 }
 
-func (e CollectorBash) Config() custom_config.MetricsItem {
+func (e CollectorBash) Config() config.MetricsItem {
 	return e.metricsConfig
 }
 

@@ -36,6 +36,7 @@ go get github.com/orange-cloudfoundry/custom_exporter
 cd $GOPATH/src/github.com/orange-cloudfoundry/custom_exporter
 $GOPATH/bin/promu build --prefix $GOPATH/bin
 ```
+Note : a bosh release is available at github : https://github.com/orange-cloudfoundry/custom_exporter-boshrelease
 
 ## Configuration 
 

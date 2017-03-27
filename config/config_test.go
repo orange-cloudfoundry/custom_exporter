@@ -1,9 +1,9 @@
-package custom_config_test
+package config_test
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/orange-cloudfoundry/custom_exporter/custom_config"
+	"github.com/orange-cloudfoundry/custom_exporter/config"
 )
 
 /*
@@ -25,12 +25,12 @@ limitations under the License.
 var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 	var (
 		filePath string
-		config   *custom_config.Config
+		cnf      *config.Config
 		err      error
 	)
 
 	JustBeforeEach(func() {
-		config, err = custom_config.NewConfig(filePath)
+		cnf, err = config.NewConfig(filePath)
 	})
 
 	Context("When miss the file config path", func() {
@@ -73,34 +73,34 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 		})
 
 		It("should return a config struct of 6 metrics", func() {
-			Expect(len(config.Metrics)).To(Equal(3))
+			Expect(len(cnf.Metrics)).To(Equal(3))
 		})
 
 		It("should return metrics custom_metric_shell well composed", func() {
 			name := "custom_metric_shell"
 
-			Expect(config.Metrics[name].Name).To(Equal(name))
-			Expect(len(config.Metrics[name].Commands)).To(Equal(3))
-			Expect(config.Metrics[name].Credential.Name).To(Equal("shell_root"))
-			Expect(config.Metrics[name].Credential.Collector).To(Equal("bash"))
+			Expect(cnf.Metrics[name].Name).To(Equal(name))
+			Expect(len(cnf.Metrics[name].Commands)).To(Equal(3))
+			Expect(cnf.Metrics[name].Credential.Name).To(Equal("shell_root"))
+			Expect(cnf.Metrics[name].Credential.Collector).To(Equal("bash"))
 		})
 
 		It("should return metrics custom_metric_shell well composed", func() {
 			name := "custom_metric_mysql"
 
-			Expect(config.Metrics[name].Name).To(Equal(name))
-			Expect(len(config.Metrics[name].Commands)).To(Equal(1))
-			Expect(config.Metrics[name].Credential.Name).To(Equal("mysql_connector"))
-			Expect(config.Metrics[name].Credential.Collector).To(Equal("mysql"))
+			Expect(cnf.Metrics[name].Name).To(Equal(name))
+			Expect(len(cnf.Metrics[name].Commands)).To(Equal(1))
+			Expect(cnf.Metrics[name].Credential.Name).To(Equal("mysql_connector"))
+			Expect(cnf.Metrics[name].Credential.Collector).To(Equal("mysql"))
 		})
 
 		It("should return metrics custom_metric_shell well composed", func() {
 			name := "custom_metric_redis"
 
-			Expect(config.Metrics[name].Name).To(Equal(name))
-			Expect(len(config.Metrics[name].Commands)).To(Equal(1))
-			Expect(config.Metrics[name].Credential.Name).To(Equal("redis_connector"))
-			Expect(config.Metrics[name].Credential.Collector).To(Equal("redis"))
+			Expect(cnf.Metrics[name].Name).To(Equal(name))
+			Expect(len(cnf.Metrics[name].Commands)).To(Equal(1))
+			Expect(cnf.Metrics[name].Credential.Name).To(Equal("redis_connector"))
+			Expect(cnf.Metrics[name].Credential.Collector).To(Equal("redis"))
 		})
 	})
 })
