@@ -4,10 +4,16 @@
 
 This project is aimed to retrieve specific metrics that can't be found in dedicated exporters.
 
-This exporter work with a dedicated config’s file that’s contain all needed metrics. Each dedicated metrics will use a collector to access to data and custom commands to be run into this collector. This dedicated commands (list) must in final result expose data to be parsed to extract: a mandatory float value and an optional list of tags (strings: labels & value)
-A collector is define by his type (bash, mysql ...) and his credentials (data source name, user, password, uri ...). Each type of collector could use his own config option.
+## Concepts
+This exporter work with a dedicated config’s file that’s contain all needed metrics.
+ 
+Each dedicated metrics will use a collector to access to data and a custom commands list that's will be run into this collector.
+The final command must expose a ready to be parsed result set to extract metric value and tags value. 
+A mapping config allows to specify the tags included otherwise, only last data on each row or record will be extract.
+  
+A collector is define by his name and include the type (bash, mysql ...) and credential (data source name, user, password, uri ...). 
 
-The dedicated metrics are exposed with a prefix "custom" and the name of the dedicated metrics into the config file.
+The dedicated metrics are exposed with a prefix "custom" and the name of this metrics extract from the config file.
  
 ## How it's work
 The main process will load the config file and will register a dedicated collector into Prometheus client framework for each metrics. Each metric is composed of a collector helper who's include a specific type collector defined into the config file
@@ -40,18 +46,17 @@ The configuration is split in 2 separate parts:
 
 #### Credential
 The credential section is composed at least as:
+
   * **name**: name of the credential 
   * **type**: collector type (one of existing collector : redis, mysql, bash, ...). If the type is not understand the metrics connected to this credential will be ignored
   
 This other options depends of collectors:
-
 | Option Name | Description | Collector |
 | :---------: | :---------- | :-------: |
 | dsn | the DSN (Data Source Name) is an URL like string usually use to connect to database | mysql, redis | 
 | user | the user to run command in shell process | bash |
 
 The DSN form example for each collector: 
-
     * mysql: driver://user:password@protocol(addr:port|[addr_ip_v6]:port|socket)/database
     * redis: protocol://<empty>:password@host:port/database
  
