@@ -79,7 +79,10 @@ func (e *CollectorMysql) Run(ch chan<- prometheus.Metric) error {
 		}
 	}
 
-	defer e.client.Close()
+	defer func() {
+		e.client.Close()
+		e.client = nil
+	}()
 
 	if err = e.client.Ping(); err != nil {
 		log.Errorf("Error for metrics \"%s\" while trying to ping DB server \"%s\": %v", e.metricsConfig.Name, e.metricsConfig.Credential.Dsn, err)
@@ -115,7 +118,7 @@ func (e *CollectorMysql) parseResult(ch chan<- prometheus.Metric, res *sql.Rows)
 	)
 
 	if colList, err := res.Columns(); err != nil {
-		log.Errorf("Error for metrics \"%s\" while retrieve columns names \"%s\": %v", e.metricsConfig.Name, err)
+		log.Errorf("Error for metrics \"%s\" while retrieve columns names : %v", e.metricsConfig.Name, err)
 		return err
 	} else {
 		nbCols = len(colList)

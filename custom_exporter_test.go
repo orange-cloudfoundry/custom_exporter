@@ -16,7 +16,6 @@ import (
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
-	"github.com/alicebob/miniredis"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"io/ioutil"
@@ -57,7 +56,6 @@ var (
 	configPath  string
 	logLevel    string
 
-	server  *miniredis.Miniredis
 	process ifrit.Process
 )
 

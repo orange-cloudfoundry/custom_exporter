@@ -9,6 +9,7 @@ import (
 	"github.com/orange-cloudfoundry/custom_exporter/collector"
 	"github.com/orange-cloudfoundry/custom_exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/log"
 	"github.com/prometheus/common/version"
 )
@@ -95,7 +96,7 @@ func main() {
 
 	prometheus.MustRegister(createListCollectors(myConfig)...)
 
-	http.Handle(*metricPath, prometheus.Handler())
+	http.Handle(*metricPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html><head><title>Custom exporter</title></head><body><h1>Custom exporter</h1><p><a href='` + *metricPath + `'>Metrics</a></p></body></html>`))
 	})
@@ -159,7 +160,7 @@ func createNewCollector(m *config.MetricsItem) prometheus.Collector {
 	}
 
 	if err != nil {
-		log.Errorf("Error:", err.Error())
+		log.Errorf("Error: %v", err)
 		return nil
 	}
 
