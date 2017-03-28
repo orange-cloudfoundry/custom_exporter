@@ -70,6 +70,8 @@ func main() {
 	fmt.Fprintln(os.Stdout, version.Info())
 	fmt.Fprintln(os.Stdout, version.BuildContext())
 
+	flag.Parse()
+
 	if *showVersion {
 		os.Exit(0)
 	}
@@ -107,7 +109,6 @@ func checkRequireArgs() bool {
 
 	res = true
 
-	flag.Parse()
 	flag.Visit(func(f *flag.Flag) { ArgsSeen[f.Name] = true })
 
 	for _, req := range ArgsRequire {
