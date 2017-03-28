@@ -11,7 +11,6 @@ import (
 	"errors"
 	"github.com/orange-cloudfoundry/custom_exporter/collector"
 	"github.com/orange-cloudfoundry/custom_exporter/config"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -36,7 +35,6 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 	var (
 		cnf      *config.Config
 		colMysql *collector.CollectorMysql
-		collect  prometheus.Collector
 		metric   config.MetricsItem
 
 		DBclient *sql.DB
@@ -69,7 +67,7 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 				Expect(isOk).To(BeTrue())
 			})
 			It("should return an error when creating the collector", func() {
-				collect, err = collector.NewPrometheusMysqlCollector(metric)
+				_, err = collector.NewPrometheusMysqlCollector(metric)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -81,7 +79,7 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 			})
 
 			It("should not return an error when creating the collector", func() {
-				collect, err = collector.NewPrometheusMysqlCollector(metric)
+				_, err = collector.NewPrometheusMysqlCollector(metric)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -116,7 +114,7 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 			})
 
 			It("should not return an error when creating the collector", func() {
-				collect, err = collector.NewPrometheusMysqlCollector(metric)
+				_, err = collector.NewPrometheusMysqlCollector(metric)
 				Expect(err).NotTo(HaveOccurred())
 			})
 

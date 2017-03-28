@@ -1,4 +1,4 @@
-# WIP Prometheus custom_exporter
+# Prometheus custom_exporter
 
 ## Intro
 

@@ -5,7 +5,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/orange-cloudfoundry/custom_exporter/collector"
 	"github.com/orange-cloudfoundry/custom_exporter/config"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"sync"
 )
@@ -30,7 +29,6 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 	var (
 		cnf     *config.Config
 		colBash *collector.CollectorBash
-		collect prometheus.Collector
 		metric  config.MetricsItem
 
 		isOk bool
@@ -56,7 +54,7 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 				Expect(isOk).To(BeTrue())
 			})
 			It("should return an error when creating the collector", func() {
-				collect, err = collector.NewPrometheusBashCollector(metric)
+				_, err = collector.NewPrometheusBashCollector(metric)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -68,7 +66,7 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 			})
 
 			It("should not return an error when creating the collector", func() {
-				collect, err = collector.NewPrometheusBashCollector(metric)
+				_, err = collector.NewPrometheusBashCollector(metric)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -101,7 +99,7 @@ var _ = Describe("Testing Custom Export, Staging Config Test: ", func() {
 			})
 
 			It("should not return an error when creating the collector", func() {
-				collect, err = collector.NewPrometheusBashCollector(metric)
+				_, err = collector.NewPrometheusBashCollector(metric)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
