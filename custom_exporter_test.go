@@ -62,6 +62,8 @@ var (
 func (r failRunner) Run(sigChan <-chan os.Signal, ready chan<- struct{}) error {
 	defer GinkgoRecover()
 
+	var err error
+
 	allOutput := gbytes.NewBuffer()
 
 	debugWriter := gexec.NewPrefixedWriter(
@@ -69,7 +71,7 @@ func (r failRunner) Run(sigChan <-chan os.Signal, ready chan<- struct{}) error {
 		GinkgoWriter,
 	)
 
-	session, err := gexec.Start(
+	r.session, err = gexec.Start(
 		r.Command,
 		gexec.NewPrefixedWriter(
 			fmt.Sprintf("\x1b[32m[o]\x1b[%s[%s]\x1b[0m ", r.AnsiColorCode, r.Name),
@@ -85,7 +87,6 @@ func (r failRunner) Run(sigChan <-chan os.Signal, ready chan<- struct{}) error {
 
 	fmt.Fprintf(debugWriter, "spawned %s (pid: %d)\n", r.Command.Path, r.Command.Process.Pid)
 
-	r.session = session
 	if r.sessionReady != nil {
 		close(r.sessionReady)
 	}
@@ -112,7 +113,7 @@ func (r failRunner) Run(sigChan <-chan os.Signal, ready chan<- struct{}) error {
 
 		case <-startCheckTimeout:
 			// clean up hanging process
-			session.Kill().Wait()
+			r.session.Kill().Wait()
 
 			// fail to start
 			return fmt.Errorf(
@@ -123,15 +124,15 @@ func (r failRunner) Run(sigChan <-chan os.Signal, ready chan<- struct{}) error {
 			)
 
 		case signal := <-sigChan:
-			session.Signal(signal)
+			r.session.Signal(signal)
 
-		case <-session.Exited:
+		case <-r.session.Exited:
 			if r.Cleanup != nil {
 				r.Cleanup()
 			}
 
 			Expect(string(allOutput.Contents())).To(ContainSubstring(r.StartCheck))
-			Expect(session.ExitCode()).To(Equal(r.existStatus), fmt.Sprintf("Expected process to exit with %d, got: %d", r.existStatus, session.ExitCode()))
+			Expect(r.session.ExitCode()).To(Equal(r.existStatus), fmt.Sprintf("Expected process to exit with %d, got: %d", r.existStatus, r.session.ExitCode()))
 			return nil
 		}
 	}
