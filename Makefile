@@ -13,13 +13,20 @@
 
 GO     ?= GO15VENDOREXPERIMENT=1 go
 GOPATH := $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
+SCPATH := $(GOPATH)/src/github.com/orange-cloudfoundry/custom_exporter
+LCPATH := $(shell pwd)
 
 PROMU       ?= $(GOPATH)/bin/promu
 STATICCHECK ?= $(GOPATH)/bin/staticcheck
 pkgs         = $(shell $(GO) list ./... )
 
-PREFIX                  ?= $(shell pwd)
-BIN_DIR                 ?= $(shell pwd)
+CUR_DIR                 ?= $(shell basename $(pwd))
+BIN_DIR                 ?= $(GOPATH)/bin
+SRC_DIR			?= $(GOPATH)/src
+PKG_DIR			?= $(GOPATH)/pkg
+
+PREFIX                  ?= $(shell pwd) 
+
 DOCKER_IMAGE_NAME       ?= custom_exporter
 DOCKER_IMAGE_TAG        ?= $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
 
@@ -29,21 +36,25 @@ else
     OS_detected := $(shell uname -s)
 endif
 
-all: format vet staticcheck build test 
+all: format vet test staticcheck build 
 
-style:
+pre-build:
+	@echo ">> get dependancies"
+	@$(GO) get .
+
+style: pre-build
 	@echo ">> checking code style"
 	@! gofmt -d $(shell find . -prune -o -name '*.go' -print) | grep '^'
 
-test:
+test: pre-build
 	@echo ">> running tests"
 	@$(GO) test -race -short $(pkgs)
 
-format:
+format: pre-build
 	@echo ">> formatting code"
 	@$(GO) fmt $(pkgs)
 
-vet:
+vet: pre-build
 	@echo ">> vetting code"
 	@$(GO) vet $(pkgs)
 
@@ -51,13 +62,15 @@ staticcheck: $(STATICCHECK)
 	@echo ">> running staticcheck"
 	@$(STATICCHECK) $(pkgs)
 
-build: $(PROMU)
+buildbin: $(PROMU)
 	@echo ">> building binaries"
 	@$(PROMU) build --prefix $(PREFIX)
 
+build: pre-build buildbin 
+
 tarball: $(PROMU)
 	@echo ">> building release tarball"
-	@$(PROMU) tarball --prefix $(PREFIX) $(BIN_DIR)
+	@$(PROMU) tarball --prefix $(PREFIX)
 
 docker:
 	@echo ">> building docker image"
