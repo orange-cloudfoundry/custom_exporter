@@ -23,18 +23,29 @@ On each call to the metrics path of the exporter (i.e. http://localhost:9213/met
 If a metrics is not available (errors on running command, result empty ...) a minimal result will be exposing. When this metric’s commands rise up, the result will appear. If the config of a metrics is not well defined, the metrics will be not registered into the main process. If no metrics are registered, the main process will exit with an error status.
 
 ## Build from source 
-To build from source, use [`promu` tools](https://github.com/prometheus/promu): 
+To build from source, a makefile is available in the repos, so the easiest build process is :
 ```bash
-go get github.com/prometheus/promu
-cd $GOPATH/src/github.com/prometheus/promu
+
+go get -u github.com/orange-cloudfoundry/custom_exporter
+cd $GOPATH/src/github.com/orange-cloudfoundry/custom_exporter
+
 make
+
 ```
 
-and use this command: 
+or building with [`promu` tools](https://github.com/prometheus/promu): 
 ```bash
-go get github.com/orange-cloudfoundry/custom_exporter
+
+go get -u github.com/prometheus/promu
+cd $GOPATH/src/github.com/prometheus/promu
+
+make
+
+go get -u github.com/orange-cloudfoundry/custom_exporter
 cd $GOPATH/src/github.com/orange-cloudfoundry/custom_exporter
+
 $GOPATH/bin/promu build --prefix $GOPATH/bin
+
 ```
 Note: [a bosh release for cloudfoundry](https://github.com/orange-cloudfoundry/custom_exporter-boshrelease) is available at github
 
