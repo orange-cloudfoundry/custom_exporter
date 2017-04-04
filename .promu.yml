@@ -6,11 +6,11 @@ repository:
 
 build:
   ldflags: |
-    -X github.com/prometheus/common/version.Version={{.Version}}
-    -X github.com/prometheus/common/version.Revision={{.Revision}}
-    -X github.com/prometheus/common/version.Branch={{.Branch}}
-    -X github.com/prometheus/common/version.BuildUser={{user}}
-    -X github.com/prometheus/common/version.BuildDate={{date "20060102-15:04:05"}}
+    -X github.com/prometheus/common/version.Version=1.0.1
+    -X github.com/prometheus/common/version.Revision=159a029e2d320e99bca683c0c8baa8bf0b5dfb68
+    -X github.com/prometheus/common/version.Branch=release-1.0
+    -X github.com/prometheus/common/version.BuildUser=Nicolas.Juhel
+    -X github.com/prometheus/common/version.BuildDate=2017-03-29.16:41:21.+0200
 
 tarball:
     files:
