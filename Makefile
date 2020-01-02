@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-GO     ?= GO15VENDOREXPERIMENT=1 go
+GO     ?= CGO_ENABLED=1 go
 GOPATH := $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
 SCPATH := $(GOPATH)/src/github.com/orange-cloudfoundry/custom_exporter
 LCPATH := $(shell pwd)
@@ -38,9 +38,14 @@ endif
 
 all: format vet test staticcheck build 
 
+clean:
+	@echo ">> cleanning"
+	@$(GO) clean -x -r -testcache -modcache
+
 pre-build:
 	@echo ">> get dependancies"
-	@$(GO) get .
+	@$(GO) mod download
+	@$(GO) mod vendor
 
 style: pre-build
 	@echo ">> checking code style"
@@ -66,7 +71,7 @@ buildbin: $(PROMU)
 	@echo ">> building binaries"
 	@$(PROMU) build --prefix $(PREFIX)
 
-build: pre-build buildbin 
+build: clean pre-build buildbin
 
 tarball: $(PROMU)
 	@echo ">> building release tarball"
@@ -79,7 +84,7 @@ $(GOPATH)/bin/staticcheck:
 	@GOOS= GOARCH= $(GO) get -u honnef.co/go/tools/cmd/staticcheck
 
 
-.PHONY: all style format build test vet tarball docker promu staticcheck
+.PHONY: all style format build test vet tarball docker promu staticcheck clean
 
 # Declaring the binaries at their default locations as PHONY targets is a hack
 # to ensure the latest version is downloaded on every make execution.

@@ -2,15 +2,15 @@ package collector
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"net/url"
+	"strconv"
+	"strings"
+
 	"github.com/orange-cloudfoundry/custom_exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"gopkg.in/redis.v5"
-	"net/url"
-	"strconv"
-	"strings"
 )
 
 /*
@@ -52,7 +52,7 @@ func NewPrometheusRedisCollector(config config.MetricsItem) (prometheus.Collecto
 	log.Infof("Collector Added: Type '%s' / Name '%s' / Credentials '%s'", CollectorRedisName, config.Name, config.Credential.Name)
 
 	if len(config.Value_name) < 1 {
-		err = errors.New(fmt.Sprintf("Error keymapping not present for collector %s", CollectorRedisName))
+		err = fmt.Errorf("keymapping not present for collector %s", CollectorRedisName)
 		log.Errorln("Error:", err)
 	}
 
@@ -110,7 +110,7 @@ func (e *CollectorRedis) Run(ch chan<- prometheus.Metric) error {
 		}
 
 		out = []byte(cmd.Val().(string))
-		jsn = make(map[string]interface{}, 0)
+		jsn = make(map[string]interface{})
 
 		if err = json.Unmarshal(out, &jsn); err != nil {
 			log.Errorf("Error for metrics \"%s\" while parsing json result of redis command \"%s\": %s", e.metricsConfig.Name, c, err.Error())
@@ -118,7 +118,7 @@ func (e *CollectorRedis) Run(ch chan<- prometheus.Metric) error {
 		}
 	}
 
-	res = make(map[string]string, 0)
+	res = make(map[string]string)
 	for k, v := range jsn {
 		res[k] = e.interface2String(v)
 	}
@@ -138,7 +138,7 @@ func (e *CollectorRedis) Run(ch chan<- prometheus.Metric) error {
 	metricVal := float64(0)
 
 	if val, isOk := res[e.metricsConfig.Value_name]; !isOk {
-		err = errors.New(fmt.Sprintf("Error keymapping not found in resultSet for collector %s and command [ %s ]", CollectorRedisName, strings.Join(e.metricsConfig.Commands, ", ")))
+		err = fmt.Errorf("keymapping not found in resultSet for collector %s and command [ %s ]", CollectorRedisName, strings.Join(e.metricsConfig.Commands, ", "))
 	} else {
 		if metricVal, err = strconv.ParseFloat(val, 64); err != nil {
 			metricVal = float64(0)
@@ -199,7 +199,7 @@ func (e CollectorRedis) DsnPart() (map[string]interface{}, error) {
 		res  map[string]interface{}
 	)
 
-	res = make(map[string]interface{}, 0)
+	res = make(map[string]interface{})
 
 	if dsn, err = url.Parse(e.metricsConfig.Credential.Dsn); err != nil {
 		return res, err
@@ -213,7 +213,7 @@ func (e CollectorRedis) DsnPart() (map[string]interface{}, error) {
 		dbn = 0
 	} else {
 		if dbn, err = strconv.ParseInt(strings.Trim(dsn.Path, "/"), 10, 64); err != nil {
-			return res, errors.New(fmt.Sprintf("db identifier not well formatted (int value required) : %s", err.Error()))
+			return res, fmt.Errorf("db identifier not well formatted (int value required) : %s", err.Error())
 		}
 	}
 
@@ -235,9 +235,7 @@ func (e CollectorRedis) redisClient() (*redis.Client, error) {
 		return clt, err
 	}
 
-	var redisOpt redis.Options
-
-	redisOpt = redis.Options{
+	var redisOpt = redis.Options{
 		Addr: dsn["addr"].(string),
 	}
 

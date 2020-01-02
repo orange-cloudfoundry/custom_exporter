@@ -2,7 +2,6 @@ package collector
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -135,7 +134,7 @@ func (e *CollectorMysql) parseResult(ch chan<- prometheus.Metric, res *sql.Rows)
 		tagValues = make([]string, 0)
 		valMetric = float64(0)
 
-		for i, _ := range colMapping {
+		for i := range colMapping {
 			if (i + 1) < len(colMapping) {
 				ptrMapping[i] = &rawMapping[i]
 			} else {
@@ -178,9 +177,7 @@ func (e *CollectorMysql) parseResult(ch chan<- prometheus.Metric, res *sql.Rows)
 }
 
 func (e *CollectorMysql) mapColumsConfig(colums, config []string) map[int]string {
-	var res map[int]string
-
-	res = make(map[int]string, 0)
+	var res = make(map[int]string)
 
 	for i, c := range colums {
 
@@ -207,17 +204,17 @@ func (e CollectorMysql) DsnPart() (string, string, error) {
 	dsn := strings.TrimSpace(e.metricsConfig.Credential.Dsn)
 
 	if len(dsn) < 1 {
-		return "", "", errors.New(fmt.Sprintf("Cannot find a valid dsn : %s", e.metricsConfig.Credential.Dsn))
+		return "", "", fmt.Errorf("cannot find a valid dsn : %s", e.metricsConfig.Credential.Dsn)
 	}
 
 	dsnPart := strings.SplitN(e.metricsConfig.Credential.Dsn, "://", 2)
 
 	if dsnPart[0] == "" {
-		return "", "", errors.New(fmt.Sprintf("Cannot find a valid dsn : %s", e.metricsConfig.Credential.Dsn))
+		return "", "", fmt.Errorf("cannot find a valid dsn : %s", e.metricsConfig.Credential.Dsn)
 	}
 
 	if len(dsnPart[1]) < 3 {
-		return "", "", errors.New(fmt.Sprintf("Cannot find a valid dsn : %s", e.metricsConfig.Credential.Dsn))
+		return "", "", fmt.Errorf("cannot find a valid dsn : %s", e.metricsConfig.Credential.Dsn)
 	}
 
 	return dsnPart[0], dsnPart[1], nil

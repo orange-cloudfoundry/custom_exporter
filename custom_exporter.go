@@ -62,7 +62,7 @@ func init() {
 		"collector.config",
 	}
 
-	ArgsSeen = make(map[string]bool, 0)
+	ArgsSeen = make(map[string]bool)
 
 	prometheus.MustRegister(version.NewCollector(config.Namespace + "_" + config.Exporter))
 }

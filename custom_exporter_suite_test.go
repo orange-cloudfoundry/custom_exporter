@@ -5,8 +5,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 
-	"os"
-	"strings"
 	"testing"
 )
 
@@ -27,21 +25,6 @@ limitations under the License.
 */
 
 var binaryPath string
-
-func init() {
-	find := false
-
-	for _, v := range os.Args {
-		if strings.Contains(v, "log.level") {
-			find = true
-			break
-		}
-	}
-
-	if !find {
-		os.Args = append(os.Args, "-log.level=debug")
-	}
-}
 
 func TestCustomExporter(t *testing.T) {
 	RegisterFailHandler(Fail)

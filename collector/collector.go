@@ -1,13 +1,13 @@
 package collector
 
 import (
-	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/orange-cloudfoundry/custom_exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
-	"strings"
-	"time"
 )
 
 /*
@@ -83,16 +83,15 @@ func (e CollectorHelper) Check(err error) error {
 	name := e.collectorCustom.Name()
 
 	if config.Credential.Collector != name {
-		err = errors.New(
-			fmt.Sprintf("Error mismatching collector type : config type = %s & current type = %s",
-				config.Credential.Collector,
-				name,
-			))
+		err = fmt.Errorf("mismatching collector type : config type = %s & current type = %s",
+			config.Credential.Collector,
+			name,
+		)
 		log.Errorln("Error:", err)
 	}
 
 	if len(config.Commands) < 1 {
-		err = errors.New("Error empty commands to run !!")
+		err = fmt.Errorf("empty commands to run")
 		log.Errorln("Error:", err)
 	}
 

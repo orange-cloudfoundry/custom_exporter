@@ -23,6 +23,9 @@ On each call to the metrics path of the exporter (i.e. http://localhost:9213/met
 If a metrics is not available (errors on running command, result empty ...) a minimal result will be exposing. When this metric’s commands rise up, the result will appear. If the config of a metrics is not well defined, the metrics will be not registered into the main process. If no metrics are registered, the main process will exit with an error status.
 
 ## Build from source 
+
+> Requirement : go version >= 1.13 (using go mod)
+
 To build from source, a makefile is available in the repos, so the easiest build process is :
 ```bash
 

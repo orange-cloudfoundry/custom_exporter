@@ -4,13 +4,12 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"sync"
+	"testing"
+
 	"github.com/alicebob/miniredis"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
-	"os"
-	"strings"
-	"sync"
-	"testing"
 )
 
 /*
@@ -36,21 +35,6 @@ var (
 	ds          chan *prometheus.Desc
 	wg          sync.WaitGroup
 )
-
-func init() {
-	find := false
-
-	for _, v := range os.Args {
-		if strings.Contains(v, "log.level") {
-			find = true
-			break
-		}
-	}
-
-	if !find {
-		os.Args = append(os.Args, "-log.level=debug")
-	}
-}
 
 func TestCustomExporter(t *testing.T) {
 	RegisterFailHandler(Fail)

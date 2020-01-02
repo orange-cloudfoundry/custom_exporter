@@ -1,13 +1,14 @@
 package config
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/common/log"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os/user"
 	"strconv"
 	"strings"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/log"
+	"gopkg.in/yaml.v2"
 )
 
 /*
@@ -106,9 +107,7 @@ func NewConfig(configFile string) (*Config, error) {
 }
 
 func (c Config) credentialsList(yaml ConfigYaml) map[string]CredentialsItem {
-	var result map[string]CredentialsItem
-
-	result = make(map[string]CredentialsItem, 0)
+	var result = make(map[string]CredentialsItem)
 
 	for _, v := range yaml.Credentials {
 		result[v.Name] = CredentialsItem{
@@ -136,11 +135,8 @@ func (e Config) ValueType(Value_type string) prometheus.ValueType {
 }
 
 func (c *Config) metricsList(yaml ConfigYaml) {
-	var result map[string]MetricsItem
-	var credentials map[string]CredentialsItem
-
-	result = make(map[string]MetricsItem, 0)
-	credentials = c.credentialsList(yaml)
+	var result = make(map[string]MetricsItem)
+	var credentials = c.credentialsList(yaml)
 
 	for _, v := range yaml.Metrics {
 		if cred, ok := credentials[v.Credential]; ok {

@@ -1,5 +1,15 @@
+#binary
 /custom_exporter
+
+#cover files
 *.cover*
 */*.cover*
 **/*.cover*
+
+#IDE jetbrains
+.idea
+.idea/
+
+# Vendoring folder
+vendor/
 

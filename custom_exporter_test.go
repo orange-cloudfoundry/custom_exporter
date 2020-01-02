@@ -151,7 +151,7 @@ var _ = Describe("Custom Export Main Test", func() {
 		It("shows usage", func() {
 			var args []string
 
-			args = append(args, "-log.level="+logLevel)
+			//			args = append(args, "-log.level="+logLevel)
 
 			exporter := failRunner{
 				Name:        "custom_exporter",
@@ -168,7 +168,7 @@ var _ = Describe("Custom Export Main Test", func() {
 			var args []string
 
 			args = append(args, "-collector.config=wrong.err")
-			args = append(args, "-log.level="+logLevel)
+			//			args = append(args, "-log.level="+logLevel)
 
 			exporter := failRunner{
 				Name:        "custom_exporter",
@@ -190,7 +190,7 @@ var _ = Describe("Custom Export Main Test", func() {
 			args = append(args, "-web.listen-address="+listenAddr)
 			args = append(args, "-collector.config="+configPath)
 			args = append(args, "-web.telemetry-path="+metricRoute)
-			args = append(args, "-log.level="+logLevel)
+			//			args = append(args, "-log.level="+logLevel)
 
 			exporter := failRunner{
 				Name:              "custom_exporter",
